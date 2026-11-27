@@ -15,7 +15,7 @@ macOS on Apple Silicon only for now (ONNX Runtime, which runs the voice, ships n
 
 ```bash
 brew install nijicha/tap/walkie
-walkie setup        # once: Chromium and the Thai voice model (walkie setup en: also English)
+walkie setup        # once: Chromium, then pick the voices (Thai, English)
 ```
 
 Then, in Claude Code:
@@ -28,13 +28,16 @@ Then, in Claude Code:
 
 | Command | Does |
 |---|---|
-| `walkie setup` | Downloads Chromium and the voice model; checks ffmpeg |
+| `walkie setup` | Downloads Chromium, asks which voices to set up and downloads them; checks ffmpeg |
+| `walkie setup th en` | The same, for the voices named: `th` Thai (MakHam), `en` English (Kokoro) |
+| `walkie setup list` | The voices: model, size, installed or not |
+| `walkie say th\|en out.wav "text"` | Says one line with that language's default voice |
 | `walkie mcp` | Runs the MCP server on stdio (the plugin starts it) |
 | `walkie smoke` | Records a static test page, no app needed |
 | `walkie preview <profile> [out.html]` | Shows every state of a profile's look on a sample page |
 | `walkie profile --list` / `--resolve <name>` | Lists profiles / prints one merged over `default` |
 | `walkie version`, `walkie path` | The engine version / its folder |
-| `walkie test` | `wt`'s tests, schema checks and the smoke recording |
+| `walkie test` | The Rust tests, schema checks and the smoke recording |
 
 ## Layout
 
@@ -43,7 +46,7 @@ Then, in Claude Code:
 | `bin/walkie` | The command line |
 | `mcp/` | MCP server: `start`, `storyboard`, `record`, `revoice`, `rerender`, … |
 | `scripts/` | Recording kit (Playwright), overlay drawing, build, queue, library (TypeScript) |
-| `wt/` | `wt`: Thai and English TTS, video mixing, contact sheet, simulator recording (Rust) |
+| `wt/` | The engine's internal tools, called by `walkie` and the MCP server: TTS, video mixing, contact sheet, simulator recording (Rust) |
 | `flutter/` | The recording kit for Flutter apps (Dart) |
 | `profiles/default/` | The default look and voice; every team profile is merged over it |
 | `schema/` | JSON Schemas for profiles, videos and events: the contract for apps built on the engine |
