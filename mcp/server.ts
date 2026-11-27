@@ -17,11 +17,13 @@ import { LIBRARY, PREVIEWS, WT, checkWt } from "../scripts/paths.ts"
 import { inQueue } from "../scripts/queue.ts"
 import { agentUsage, describeUsage } from "../scripts/usage.ts"
 import { listLibrary, prText, textItems } from "../scripts/library.ts"
+import { compareVersions } from "../scripts/version.ts"
 
 const SKILL = resolve(dirname(fileURLToPath(import.meta.url)), "..")
 const SCRIPTS = join(SKILL, "scripts")
 const NAME = /^[a-z0-9][a-z0-9-]{0,62}$/
 const VERSION: string = JSON.parse(readFileSync(join(SKILL, "package.json"), "utf8")).version
+
 
 type Run = { code: number; out: string; err: string }
 
@@ -184,9 +186,13 @@ function createServer() {
       repo: z.string().describe("Absolute path to the repo root"),
       name: z.string().describe("Short name for this walkie, e.g. ticket-123-checkout (lower case, dashes)"),
       profile: z.string().optional().describe("Profile name; omit to pick by git remote"),
+      min_engine: z.string().optional().describe("The oldest engine version the calling skill works with, e.g. 0.1.1-alpha"),
     }),
-  }, async ({ repo, name, profile }) => {
+  }, async ({ repo, name, profile, min_engine }) => {
     try {
+      if (min_engine && compareVersions(VERSION, min_engine) < 0)
+        return fail(`The walkie engine is ${VERSION}, older than this skill needs (${min_engine}). ` +
+          "Tell the user to run `brew upgrade walkie` and restart Claude Code, then try again.")
       const root = checkRepo(repo)
       if (!NAME.test(name)) return fail(`name must be lower-case letters, digits and dashes: ${name}`)
       const probe = mkdtempSync(join(tmpdir(), "walkie-"))
@@ -201,12 +207,13 @@ function createServer() {
       const notes = join(again.profile.dir, "NOTES.md")
       const ignored = (await run("git", ["-C", root, "check-ignore", "-q", work])).code === 0
       return text([
+        `Engine: walkie ${VERSION}`,
         `Profile: ${again.profile.name} (${again.profile.chosen_because})`,
         `Walkie folder: ${dir}`,
         `Spec: ${spec}`,
         flutter
           ? `Runner: flutter (app ${join(root, again.profile.record.app_dir)}, device ${again.profile.record.device ?? "the running one"}). ` +
-            `Read ${join(SKILL, "..", "references", "flutter.md")} before writing the test.`
+            "Read the walkie skill's references/flutter.md before writing the test."
           : "Runner: browser (Playwright)",
         `Sequence: ${Object.entries(again.sequence).filter(([, v]) => typeof v === "boolean").map(([k, v]) => `${k} ${v ? "on" : "off"}`).join(", ")}`,
         ignored ? "" : `WARNING: ${work} is not gitignored; add it before recording.`,

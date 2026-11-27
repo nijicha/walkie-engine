@@ -98,5 +98,7 @@ export function prText(m: Manifest, scenes: Scene[]) {
     "",
     `Length ${mmss(m.duration_s)}, recorded on \`${m.branch}\` at \`${m.commit}\`.`,
     ...(rows.length ? ["", "| Step | On screen | Narration |", "|---|---|---|", ...rows] : []),
+    "",
+    "<sub>Made with [Walkie](https://github.com/nijicha/walkie-engine)</sub>",
   ].join("\n")
 }
