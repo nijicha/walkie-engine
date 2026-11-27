@@ -2,7 +2,7 @@
  "$schema": "https://json-schema.org/draft/2020-12/schema",
  "$id": "https://github.com/nijicha/walkie-engine/schema/voice.schema.json",
  "title": "Voice",
- "description": "Text to speech for the narration. A profile file lists only what it changes: every field is optional and falls back to profiles/default.",
+ "description": "Text to speech for the narration. A profile file lists only what it changes: every field is optional and falls back to profiles/default (voice.json for Thai; with language en, voice.en.json). The defaults below are Thai's.",
  "type": "object",
  "additionalProperties": false,
  "properties": {
@@ -12,26 +12,44 @@
   "engine": {
    "type": "string",
    "enum": [
-    "makham"
+    "makham",
+    "kokoro"
    ],
    "default": "makham",
-   "description": "TTS engine. makham speaks Thai."
+   "description": "TTS engine. makham speaks Thai, kokoro speaks English. Follows language when left out."
   },
   "language": {
    "type": "string",
    "enum": [
-    "th"
+    "th",
+    "en"
    ],
-   "default": "th"
+   "default": "th",
+   "description": "Language of the narration: th (Thai) or en (US English). Setting en starts from profiles/default/voice.en.json."
   },
   "model": {
    "type": "string",
    "enum": [
     "makham_female",
-    "paradee"
+    "paradee",
+    "kokoro",
+    "kokoro_fp32"
    ],
    "default": "makham_female",
-   "description": "makham_female sounds natural; paradee is faster with a metallic buzz, for drafts."
+   "description": "Thai: makham_female sounds natural; paradee is faster with a metallic buzz, for drafts. English: kokoro (int8, 92 MB) or kokoro_fp32 (326 MB)."
+  },
+  "speaker": {
+   "type": "string",
+   "enum": [
+    "af_heart",
+    "af_bella",
+    "af_nicole",
+    "af_sarah",
+    "am_michael",
+    "am_fenrir",
+    "am_puck"
+   ],
+   "description": "English only: the Kokoro speaker (af_ female, am_ male). Default af_heart."
   },
   "speed": {
    "type": "number",
@@ -43,7 +61,7 @@
   },
   "phrase_gap": {
    "type": "number",
-   "description": "Pause at each space in the narration.",
+   "description": "Thai: pause at each space in the narration. English: pause between the parts of a line too long for one go.",
    "default": 0.12,
    "minimum": 0,
    "maximum": 0.6,
@@ -52,7 +70,7 @@
   },
   "max_rate": {
    "type": "number",
-   "description": "Syllables per second above which a line gets the FAST flag.",
+   "description": "Syllables per second above which a line gets the FAST flag (English default 5.5).",
    "default": 4.3,
    "minimum": 3,
    "maximum": 6,
@@ -61,7 +79,7 @@
   "eq": {
    "type": "string",
    "default": "highshelf=f=7000:g=-4,lowpass=f=11000",
-   "description": "ffmpeg audio filter applied to every clip. Empty for none."
+   "description": "ffmpeg audio filter applied to every clip. Empty for none (the English default)."
   },
   "breath": {
    "type": "string",
@@ -71,7 +89,7 @@
     "keep"
    ],
    "default": "cut",
-   "description": "The inhale the model starts each phrase with."
+   "description": "The inhale the model starts each phrase with (English default keep)."
   },
   "breath_db": {
    "type": "integer",
@@ -87,7 +105,7 @@
    "additionalProperties": {
     "type": "string"
    },
-   "description": "Word -> phonemes, for words the G2P cannot reach (e.g. สปาร์ก -> sa↓.paːk↑).",
+   "description": "Word -> phonemes, for words the G2P cannot reach. Thai: สปาร์ก -> sa↓.paːk↑. English (misaki's US set): Eventpop -> ˈɛvəntpˌɑp.",
    "x-control": "lexicon"
   }
  }

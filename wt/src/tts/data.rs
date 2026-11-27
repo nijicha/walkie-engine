@@ -1,7 +1,8 @@
 //! The files the voice needs, downloaded once and checked against pinned hashes:
 //!   - the MakHam ONNX models (pythainlp/MakHamTTS on Hugging Face, Apache-2.0),
 //!   - FastThaiG2P's dictionary, IPA table and TLTK fallback data (awslabs/FastThaiG2P),
-//!   - PyThaiNLP's default word list (for maiyamok; PyThaiNLP 5.4.0, Apache-2.0).
+//!   - PyThaiNLP's default word list (for maiyamok; PyThaiNLP 5.4.0, Apache-2.0),
+//!   - for English, Kokoro-82M v1.0 (onnx-community/Kokoro-82M-v1.0-ONNX, Apache-2.0).
 //! They go to ~/.cache/walkie/tts (WALKIE_TTS_DATA overrides it). A model already in
 //! the Hugging Face cache (from the Python version) is used from there.
 
@@ -139,19 +140,24 @@ pub fn kokoro_model(name: &str) -> Option<(&'static str, &'static str)> {
     }
 }
 
-/// Kokoro voices (US: af_ female, am_ male; British: bf_, bm_).
-pub fn kokoro_voice(name: &str) -> Option<(String, &'static str)> {
+pub const KOKORO_MODELS: &str = "kokoro, kokoro_fp32";
+
+/// US English speakers (af_ female, am_ male), the better-rated ones in Kokoro's VOICES.md.
+pub fn kokoro_speaker(name: &str) -> Option<(String, &'static str)> {
     let sha = match name {
         "af_heart" => "d583ccff3cdca2f7fae535cb998ac07e9fcb90f09737b9a41fa2734ec44a8f0b",
         "af_bella" => "f69d836209b78eb8c66e75e3cda491e26ea838a3674257e9d4e5703cbaf55c8b",
+        "af_nicole" => "cd2191ab31b914ed7b318416b0e4440fdf392ddad9106a060819aa600a64f59a",
+        "af_sarah" => "4409fbc125afabacc615d94db5398d847006a737b0247d6892b7a9a0007a2f0a",
         "am_michael" => "1d1f21dd8da39c30705cd4c75d039d265e9bc4a2a93ed09bc9e1b1225eb95ba1",
-        "bf_emma" => "669fe0647f9dd04fcab92f1439a40eeb4c8b4ab1f82e4996fe3d918ce4a63b73",
+        "am_fenrir" => "c27989f741f7ee34d273a39d8a595cc0837d35f5ced9a29b7cc162614616df43",
+        "am_puck" => "fcf73c989033e9233e0b98713eca600c8c74dcc1614b37009d5450ff4a2274a0",
         _ => return None,
     };
     Some((format!("voices/{name}.bin"), sha))
 }
 
-pub const KOKORO_VOICES: &str = "af_heart, af_bella, am_michael, bf_emma";
+pub const KOKORO_SPEAKERS: &str = "af_heart, af_bella, af_nicole, af_sarah, am_michael, am_fenrir, am_puck";
 pub const KOKORO_TOKENIZER: (&str, &str) = ("tokenizer.json", "77a02c8e164413299b4b4c403b14f8e0e1c1b727db4d46a09d6327b861060a34");
 
 /// A file of the Kokoro model, from the Hugging Face cache when it has this revision.

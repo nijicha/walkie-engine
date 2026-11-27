@@ -2,13 +2,23 @@
 // Uses the smoke page and spec, so no app has to run.
 import { Client } from "@modelcontextprotocol/client"
 import { StdioClientTransport } from "@modelcontextprotocol/client/stdio"
-import { cpSync, readFileSync } from "node:fs"
+import { cpSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs"
+import { tmpdir } from "node:os"
 import { dirname, join, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
 
 const SKILL = resolve(dirname(fileURLToPath(import.meta.url)), "../..")
 const repo = resolve(process.argv[2] ?? SKILL)  // this repo itself
-const env = { ...process.env, WALKIE_HOME: process.env.WALKIE_HOME ?? "/tmp/walkie-test/videos" } as Record<string, string>
+// An English profile, next to the user's own: only its voice language and a lexicon entry.
+const profiles = mkdtempSync(join(tmpdir(), "walkie-profiles-"))
+mkdirSync(join(profiles, "en-check"))
+writeFileSync(join(profiles, "en-check", "profile.json"), JSON.stringify({ name: "en-check" }))
+writeFileSync(join(profiles, "en-check", "voice.json"), JSON.stringify({ language: "en", lexicon: { Eventpop: "ˈɛvəntpˌɑp" } }))
+const env = {
+  ...process.env,
+  WALKIE_HOME: process.env.WALKIE_HOME ?? "/tmp/walkie-test/videos",
+  WALKIE_PROFILES: [profiles, process.env.WALKIE_PROFILES].filter(Boolean).join(":"),
+} as Record<string, string>
 const client = new Client({ name: "walkie-test", version: "0" })
 await client.connect(new StdioClientTransport({ command: join(SKILL, "bin/walkie"), args: ["mcp"], env }))
 
@@ -30,6 +40,7 @@ await call("profiles")
 await call("start", { repo, name: "mcp-smoke", min_engine: "99.0.0" }, { expectError: true })
 const started = await call("start", { repo, name: "mcp-smoke", min_engine: "0.1.0-alpha" })
 if (!started.includes("Engine: walkie ")) { console.error("FAIL: start does not report the engine version"); process.exit(1) }
+if (!started.includes("Voice: Thai")) { console.error("FAIL: start does not say the narration language"); process.exit(1) }
 const dir = started.match(/Walkie folder: (.+)/)![1]
 for (const f of ["demo.spec.ts", "page.html", "dark.html"]) cpSync(join(SKILL, "tests/smoke", f), join(dir, f))
 for (const f of ["Prompt-Medium.woff2", "Prompt-Bold.woff2"]) cpSync(join(SKILL, "profiles/default/fonts", f), join(dir, f))
@@ -37,6 +48,11 @@ const lines = readFileSync(join(SKILL, "tests/smoke/narration.tsv"), "utf8").tri
 const captions: Record<string, string> = { n1: "กรอกอีเมล แล้วกด <b>“บันทึก”</b>", n2: "หน้าที่มีตัวหนังสือเยอะ ใช้ <b>spotlight</b>", n3: "หน้าที่ข้อมูลเยอะ ใช้ <b>zoom</b>" }
 await call("storyboard", { repo, name: "mcp-smoke", scenes: lines.map(([clip, narration]) => ({ clip, narration, caption: captions[clip] })) })
 await call("voice_preview", { text: "ทดสอบ สปาร์ก", repo })
+// English: the lexicon entry is read; a word the G2P does not know is flagged.
+const en = await call("voice_preview", { text: "Open Eventpop, then press Save at 10:30.", profile: "en-check" })
+if (en.includes("UNKNOWN") || !en.includes("ˈɛvəntpˌɑp")) { console.error("FAIL: English preview did not use the lexicon"); process.exit(1) }
+const unknown = await call("voice_preview", { text: "Built with Kokoro.", profile: "en-check" })
+if (!unknown.includes("UNKNOWN Kokoro")) { console.error("FAIL: English preview did not flag an unknown word"); process.exit(1) }
 await call("record", { repo, name: "mcp-smoke", title: "MCP smoke test" })
 // One line that fits its gap, one far too long for it (must be refused).
 await call("revoice", { id: `${repo.split("/").pop()}--mcp-smoke`, clips: [

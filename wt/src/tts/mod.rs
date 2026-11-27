@@ -1,14 +1,16 @@
-//! Synthesize Thai text with pythainlp/MakHamTTS (CPU, ONNX).
+//! Synthesize the narration on the CPU (ONNX): Thai with pythainlp/MakHamTTS, English with
+//! Kokoro-82M (see english.rs).
 //!
-//!   wt tts DEMO_DIR < DEMO_DIR/narration.tsv     (each line: name<TAB>Thai text)
-//!   wt tts --setup                               download the model and the Thai data, say one line
+//!   wt tts DEMO_DIR < DEMO_DIR/narration.tsv     (each line: name<TAB>text, in the profile's language)
+//!   wt tts th|en --setup                         download that language's model and data, say one line
+//!   wt tts th|en OUT.wav "text"                  say one line with the default voice for that language
 //!
-//! Writes DEMO_DIR/voice/<name>.wav. Settings (model, speed, phrase_gap, max_rate, eq, breath,
-//! lexicon) come from `voice` in DEMO_DIR/profile.json. Also writes voice/durations.json, which the
+//! Writes DEMO_DIR/voice/<name>.wav. Settings (language, model, speaker, speed, phrase_gap, max_rate,
+//! eq, breath, lexicon) come from `voice` in DEMO_DIR/profile.json. Also writes voice/durations.json, which the
 //! Demo kit reads. Prints: name, seconds, syllables per second, phonemes (to check what the G2P
 //! made of each line).
 //!
-//! Pacing: each space in the Thai text is a phrase break. Every phrase is synthesized on its own
+//! Pacing (Thai): each space in the Thai text is a phrase break. Every phrase is synthesized on its own
 //! and joined with phrase_gap seconds of silence, so a long line breathes instead of running on.
 //! A line faster than max_rate syllables per second gets a FAST flag: split it with more spaces.
 //! A line of 3 or more phrases averaging under CHOPPY syllables each gets a CHOPPY flag: join them.
@@ -98,22 +100,7 @@ impl Voice {
             .iter()
             .filter_map(|(k, v)| Some((k.chars().next()?, v.as_i64()?)))
             .collect();
-        static ENV: std::sync::OnceLock<ort::environment::Environment> = std::sync::OnceLock::new();
-        let env = match ENV.get() {
-            Some(env) => env,
-            None => {
-                let env = ort::init().build()?;
-                ENV.get_or_init(|| env)
-            }
-        };
-        let mut builder = ort::session::Session::builder(env)?;
-        // WALKIE_TTS_THREADS: how many CPU threads the model may use (default: all cores).
-        // The output differs a little from run to run either way: the model adds random noise.
-        // Set explicitly: ort's own default uses fewer threads than Python's onnxruntime (on an
-        // M3, 28.7 s instead of 23.4 s for 20 lines).
-        let n = std::env::var("WALKIE_TTS_THREADS").ok().and_then(|v| v.parse().ok())
-            .unwrap_or_else(|| std::thread::available_parallelism().map_or(4, |n| n.get()));
-        builder = builder.with_intra_threads(n).map_err(|e| anyhow!("{e}"))?;
+        let mut builder = ort::session::Session::builder(ort_env()?)?.with_intra_threads(threads()).map_err(|e| anyhow!("{e}"))?;
         let session = builder.commit_from_file(data::model_file(files.onnx)?)?;
         Ok(Voice {
             session,
@@ -135,6 +122,113 @@ impl Voice {
             outputs[0].try_extract_tensor::<f32>()?.1.to_vec()
         };
         Ok(soften_breath(trim(audio), &self.breath, self.breath_db))
+    }
+}
+
+fn ort_env() -> Result<&'static ort::environment::Environment> {
+    static ENV: std::sync::OnceLock<ort::environment::Environment> = std::sync::OnceLock::new();
+    Ok(match ENV.get() {
+        Some(env) => env,
+        None => {
+            let env = ort::init().build()?;
+            ENV.get_or_init(|| env)
+        }
+    })
+}
+
+/// WALKIE_TTS_THREADS: how many CPU threads the model may use (default: all cores).
+/// The output differs a little from run to run either way: the model adds random noise.
+/// Set explicitly: ort's own default uses fewer threads than Python's onnxruntime (on an
+/// M3, 28.7 s instead of 23.4 s for 20 lines).
+fn threads() -> usize {
+    std::env::var("WALKIE_TTS_THREADS").ok().and_then(|v| v.parse().ok()).unwrap_or_else(|| std::thread::available_parallelism().map_or(4, |n| n.get()))
+}
+
+/// The voice for a profile's language: MakHam for Thai, Kokoro for English.
+enum Speaker {
+    Thai { voice: Voice, ph: Phonemizer },
+    English { kokoro: english::Kokoro, breath: String, breath_db: f64 },
+}
+
+/// One narration line, voiced.
+struct Said {
+    audio: Vec<f32>,
+    /// Phrases joined by " | ".
+    phonemes: String,
+    syllables: usize,
+    phrases: usize,
+    unknown: Vec<String>,
+    dropped: Vec<char>,
+}
+
+impl Speaker {
+    fn load(voice: &Value) -> Result<Speaker> {
+        let language = voice.get("language").and_then(Value::as_str).unwrap_or("th");
+        let engine = voice.get("engine").and_then(Value::as_str).unwrap_or(if language == "en" { "kokoro" } else { "makham" });
+        let model = voice.get("model").and_then(Value::as_str);
+        match (engine, language) {
+            ("makham", "th") => Ok(Speaker::Thai { voice: Voice::load(model.unwrap_or("makham_female"), voice)?, ph: Phonemizer::new(lexicon(voice))? }),
+            ("kokoro", "en") => Ok(Speaker::English {
+                kokoro: english::Kokoro::load(
+                    model.unwrap_or("kokoro"),
+                    voice.get("speaker").and_then(Value::as_str).unwrap_or("af_heart"),
+                    lexicon(voice),
+                    threads(),
+                )?,
+                breath: voice.get("breath").and_then(Value::as_str).unwrap_or("keep").to_string(),
+                breath_db: voice.get("breath_db").map(num).unwrap_or(-18.0),
+            }),
+            _ => bail!("voice engine {engine:?} does not speak language {language:?}: use makham for th, kokoro for en"),
+        }
+    }
+
+    fn say(&mut self, text: &str, speed: f32, silence: &[f32]) -> Result<Said> {
+        match self {
+            Speaker::Thai { voice, ph } => {
+                let phrases: Vec<String> = py_split(text).into_iter().map(|p| ph.phonemize(p)).collect::<Result<_>>()?;
+                let mut audio = vec![];
+                for (i, p) in phrases.iter().enumerate() {
+                    if i > 0 {
+                        audio.extend_from_slice(silence);
+                    }
+                    audio.extend(voice.synth(p, speed)?);
+                }
+                let phonemes = phrases.join(" | ");
+                let mut dropped: Vec<char> = phonemes.chars().filter(|c| !voice.vocab.contains_key(c) && !" |".contains(*c)).collect();
+                dropped.sort();
+                dropped.dedup();
+                Ok(Said { audio, syllables: phonemes.chars().filter(|c| TONES.contains(*c)).count(), phrases: phrases.len(), phonemes, unknown: vec![], dropped })
+            }
+            Speaker::English { kokoro, breath, breath_db } => {
+                // One utterance per line, so Kokoro paces it from the punctuation; a line too long
+                // for the model is split after a sentence or a comma, with phrase_gap between.
+                let read = kokoro.read(text)?;
+                let mut chunks: Vec<String> = vec![];
+                for piece in read.phonemes.split_inclusive(|c| ".!?;:,".contains(c)) {
+                    match chunks.last_mut() {
+                        Some(last) if english::fits(&format!("{last}{piece}")) => last.push_str(piece),
+                        _ => chunks.push(piece.to_string()),
+                    }
+                }
+                let chunks: Vec<String> = chunks.iter().map(|c| c.trim().to_string()).filter(|c| !c.is_empty()).collect();
+                let mut audio = vec![];
+                for (i, c) in chunks.iter().enumerate() {
+                    if i > 0 {
+                        audio.extend_from_slice(silence);
+                    }
+                    audio.extend(soften_breath(trim(kokoro.synth(c, speed)?), breath, *breath_db));
+                }
+                let phonemes = chunks.join(" | ");
+                let mut dropped: Vec<char> = phonemes.chars().filter(|c| !kokoro.vocab.contains_key(c) && !"|".contains(*c)).collect();
+                dropped.sort();
+                dropped.dedup();
+                Ok(Said { audio, syllables: english::syllables(&phonemes), phrases: chunks.len(), phonemes, unknown: read.unknown, dropped })
+            }
+        }
+    }
+
+    fn is_thai(&self) -> bool {
+        matches!(self, Speaker::Thai { .. })
     }
 }
 
@@ -284,28 +378,70 @@ fn lexicon(voice: &Value) -> IndexMap<String, String> {
 }
 
 pub fn main(args: &[String]) -> Result<()> {
+    const USAGE: &str = "usage: wt tts DEMO_DIR < DEMO_DIR/narration.tsv | wt tts th|en --setup | wt tts th|en OUT.wav \"text\"";
     match args {
-        [flag] if flag == "--setup" => return setup(),
-        [dir] => synthesize(Path::new(dir)),
-        _ => bail!("usage: wt tts DEMO_DIR < DEMO_DIR/narration.tsv | wt tts --setup"),
+        [flag] if flag == "--setup" => setup("th"),
+        [lang, flag] if flag == "--setup" => setup(lang),
+        [lang, out, text] if ["th", "en"].contains(&lang.as_str()) => say(lang, Path::new(out), text),
+        [dir] if !["th", "en"].contains(&dir.as_str()) => synthesize(Path::new(dir)),
+        _ => bail!(USAGE),
     }
+}
+
+/// The built-in default voice for a language (profiles/default/voice.json, or voice.<lang>.json).
+fn default_voice(language: &str) -> Result<Value> {
+    let dir = crate::util::engine_dir()?.join("profiles/default");
+    match language {
+        "th" => read_json(&dir.join("voice.json")),
+        "en" => read_json(&dir.join("voice.en.json")),
+        _ => bail!("language {language:?} unknown: th or en"),
+    }
+}
+
+/// One line with the default voice for the language: for trying a spelling, and timing a model.
+fn say(language: &str, out: &Path, text: &str) -> Result<()> {
+    let voice = default_voice(language)?;
+    let t = std::time::Instant::now();
+    let mut speaker = Speaker::load(&voice)?;
+    let load = t.elapsed().as_secs_f64();
+    let t = std::time::Instant::now();
+    let silence = vec![0f32; (num(&voice["phrase_gap"]) * RATE as f64) as usize];
+    let said = speaker.say(text, num(&voice["speed"]) as f32, &silence)?;
+    let took = t.elapsed().as_secs_f64();
+    write_wav(out, &said.audio)?;
+    let seconds = said.audio.len() as f64 / RATE as f64;
+    println!("{}\t{seconds:.2}s\t{:.1}/s\t{}\t{}", out.display(), said.syllables as f64 / seconds, said.phonemes, flags(&voice, &said, seconds, speaker.is_thai()));
+    eprintln!("load {load:.1}s, voice {took:.2}s ({:.0}x real time)", seconds / took);
+    Ok(())
+}
+
+/// FAST (too many syllables per second), CHOPPY (Thai: phrases too short), UNKNOWN (English: words
+/// the G2P cannot read, they are left out), DROPPED (phonemes the model has no token for).
+fn flags(voice: &Value, said: &Said, seconds: f64, thai: bool) -> String {
+    let mut flags = vec![];
+    if said.syllables as f64 / seconds > num(&voice["max_rate"]) {
+        flags.push("FAST".to_string());
+    }
+    if thai && said.phrases >= 3 && (said.syllables as f64 / said.phrases as f64) < CHOPPY as f64 {
+        flags.push("CHOPPY".to_string());
+    }
+    if !said.unknown.is_empty() {
+        flags.push(format!("UNKNOWN {}", said.unknown.join(",")));
+    }
+    if !said.dropped.is_empty() {
+        flags.push(format!("DROPPED {}", said.dropped.iter().collect::<String>()));
+    }
+    flags.join(" ")
 }
 
 fn synthesize(demo_dir: &Path) -> Result<()> {
     let profile = read_json(&demo_dir.join("profile.json"))?;
     let voice = &profile["voice"];
-    let engine = pystr(&voice["engine"]);
-    if engine != "makham" {
-        bail!("voice engine {engine:?} is not supported yet; wt tts knows makham (Thai)");
-    }
-    let model = voice.get("model").and_then(Value::as_str).unwrap_or("makham_female");
-    let mut tts = Voice::load(model, voice)?;
-    let mut ph = Phonemizer::new(lexicon(voice))?;
+    let mut speaker = Speaker::load(voice)?;
     let out_dir = demo_dir.join("voice");
     std::fs::create_dir_all(&out_dir)?;
     let speed = num(&voice["speed"]) as f32;
     let silence = vec![0f32; (num(&voice["phrase_gap"]) * RATE as f64) as usize];
-    let max_rate = num(&voice["max_rate"]);
     let eq = voice.get("eq").and_then(Value::as_str).filter(|e| !e.is_empty()).map(str::to_string);
     // Lines not in this run keep their earlier length (revoice makes only the clips that changed).
     let durations_file = out_dir.join("durations.json");
@@ -318,19 +454,15 @@ fn synthesize(demo_dir: &Path) -> Result<()> {
             continue;
         }
         let (name, text) = line.split_once('\t').ok_or_else(|| anyhow!("narration line without a tab: {line:?}"))?;
-        let phrases: Vec<String> = py_split(text).into_iter().map(|p| ph.phonemize(p)).collect::<Result<_>>()?;
-        if phrases.is_empty() {
+        if crate::util::py_strip(text).is_empty() {
             bail!("narration line {name} has no text");
         }
-        let mut audio = vec![];
-        for (i, p) in phrases.iter().enumerate() {
-            if i > 0 {
-                audio.extend_from_slice(&silence);
-            }
-            audio.extend(tts.synth(p, speed)?);
+        let said = speaker.say(text, speed, &silence)?;
+        if said.audio.is_empty() {
+            bail!("narration line {name} has nothing to say");
         }
         let wav = out_dir.join(format!("{name}.wav"));
-        write_wav(&wav, &audio)?;
+        write_wav(&wav, &said.audio)?;
         if let Some(eq) = &eq {
             // ffmpeg audio filter, e.g. soften the top end
             let tmp = out_dir.join(format!("{name}.raw.wav"));
@@ -338,59 +470,40 @@ fn synthesize(demo_dir: &Path) -> Result<()> {
             run("ffmpeg", &crate::sv!["-loglevel", "error", "-y", "-i", tmp.display(), "-af", eq, "-ar", RATE, wav.display()])?;
             std::fs::remove_file(&tmp)?;
         }
-        let seconds = audio.len() as f64 / RATE as f64;
+        let seconds = said.audio.len() as f64 / RATE as f64;
         let rounded: f64 = format!("{seconds:.3}").parse()?;
         durations.insert(name.to_string(), Value::from(rounded));
-        let phonemes = phrases.join(" | ");
-        let syllables = phonemes.chars().filter(|c| TONES.contains(*c)).count();
-        let rate = syllables as f64 / seconds;
-        let choppy = phrases.len() >= 3 && (syllables as f64 / phrases.len() as f64) < CHOPPY as f64;
-        let mut dropped: Vec<char> = phonemes.chars().filter(|c| !tts.vocab.contains_key(c) && !" |".contains(*c)).collect();
-        dropped.sort();
-        dropped.dedup();
-        let mut flags = String::new();
-        if rate > max_rate {
-            flags.push_str("FAST ");
-        }
-        if choppy {
-            flags.push_str("CHOPPY ");
-        }
-        if !dropped.is_empty() {
-            flags.push_str(&format!("DROPPED {}", dropped.iter().collect::<String>()));
-        }
-        println!("{name}\t{seconds:.2}s\t{rate:.1}/s\t{phonemes}\t{flags}");
+        let rate = said.syllables as f64 / seconds;
+        println!("{name}\t{seconds:.2}s\t{rate:.1}/s\t{}\t{}", said.phonemes, flags(voice, &said, seconds, speaker.is_thai()));
     }
     std::fs::write(&durations_file, to_json_indent1(&Value::Object(durations)))?;
     Ok(())
 }
 
-/// One-time download of the default model and the Thai data, then one line said as a check.
-fn setup() -> Result<()> {
-    let files = data::model("makham_female").unwrap();
-    data::model_file(files.config)?;
-    data::model_file(files.onnx)?;
-    data::g2p_data()?;
-    data::words_th()?;
-    let dir = tempfile::tempdir()?;
-    let profile = serde_json::json!({"voice": {"engine": "makham", "speed": 1.0, "phrase_gap": 0.3, "max_rate": 10}});
-    std::fs::write(dir.path().join("profile.json"), profile.to_string())?;
-    let voice = &profile["voice"];
-    let mut tts = Voice::load("makham_female", voice)?;
-    let mut ph = Phonemizer::new(IndexMap::new())?;
-    let phonemes = ph.phonemize("ทดสอบเสียง")?;
-    let audio = tts.synth(&phonemes, 1.0)?;
-    println!("ok\t{:.2}s\t{phonemes}", audio.len() as f64 / RATE as f64);
-    println!("MakHam is ready");
+/// One-time download of a language's model and data, then one line said as a check.
+fn setup(language: &str) -> Result<()> {
+    let (line, name) = match language {
+        "th" => {
+            let files = data::model("makham_female").unwrap();
+            data::model_file(files.config)?;
+            data::model_file(files.onnx)?;
+            data::g2p_data()?;
+            data::words_th()?;
+            ("ทดสอบเสียง", "MakHam (Thai)")
+        }
+        "en" => ("Testing the voice.", "Kokoro (English)"),
+        _ => bail!("language {language:?} unknown: th or en"),
+    };
+    let voice = default_voice(language)?;
+    let mut speaker = Speaker::load(&voice)?;
+    let said = speaker.say(line, 1.0, &[])?;
+    println!("ok\t{:.2}s\t{}", said.audio.len() as f64 / RATE as f64, said.phonemes);
+    println!("{name} is ready");
     Ok(())
 }
 
 /// Phonemes for each line on stdin, as wt tts would say it (phrases joined by " | "); for checking
 /// the G2P against the Python one.
-/// Spike: English with Kokoro.
-pub fn english_main(args: &[String]) -> Result<()> {
-    english::main(args)
-}
-
 pub fn g2p_main(args: &[String]) -> Result<()> {
     let lex = match args {
         [] => IndexMap::new(),
