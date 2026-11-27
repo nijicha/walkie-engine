@@ -54,7 +54,7 @@
   .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; letter-spacing: -0.02em; text-decoration: none; }
   .mark { width: 18px; height: 18px; border: 1.5px solid var(--ink); border-radius: 3px; position: relative; }
   .mark::after { content: ""; position: absolute; left: 3px; top: 3px; width: 9px; height: 9px; background: var(--accent); border-radius: 1px; }
-  .chip { font-family: var(--font-mono); font-size: 11px; color: var(--muted); border: 1px solid var(--rule-strong); border-radius: 4px; padding: 1px 6px; }
+  .chip { font-family: var(--font-mono); font-size: 12px; color: var(--muted); border: 1px solid var(--rule-strong); border-radius: 4px; padding: 1px 6px; }
   .top nav { margin-left: auto; display: flex; gap: 18px; font-size: 13px; color: var(--muted); }
   .top nav a { text-decoration: none; }
   .top nav a:hover { color: var(--ink); }
@@ -65,7 +65,7 @@
   .side, .toc { position: sticky; top: calc(56px + env(safe-area-inset-top, 0px)); align-self: start; max-height: calc(100vh - 56px); overflow-y: auto; padding-block: 32px; }
   .side { border-right: 1px solid var(--rule); padding-right: 16px; }
   .group { margin-bottom: 24px; }
-  .label { font-family: var(--font-mono); font-size: 10.5px; font-weight: 500; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; }
+  .label { font-family: var(--font-mono); font-size: 12px; font-weight: 500; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; }
   .side ul, .toc ul { list-style: none; margin: 0; padding: 0; }
   .side li a { display: block; padding: 4px 10px; margin-left: -10px; border-radius: 4px; text-decoration: none; font-size: 14px; color: var(--muted); }
   .side li a:hover { color: var(--ink); background: var(--panel); }
@@ -73,7 +73,7 @@
   .side li a.ext { display: flex; justify-content: space-between; gap: 8px; }
   .arrow { font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
   .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-  .soon { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.08em; color: var(--muted); border: 1px dashed var(--rule-strong); border-radius: 3px; padding: 0 4px; margin-left: 6px; }
+  .soon { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.08em; color: var(--muted); border: 1px dashed var(--rule-strong); border-radius: 3px; padding: 0 4px; margin-left: 6px; }
 
   .toc li a { display: block; padding: 3px 0; font-size: 13px; color: var(--muted); text-decoration: none; }
   .toc li a:hover { color: var(--ink); }
@@ -109,21 +109,21 @@
   /* Code */
   .code { position: relative; margin: 10px 0 16px; border: 1px solid var(--rule-strong); border-radius: 6px; background: var(--code-bg); }
   .code .bar { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 8px 6px 14px; border-bottom: 1px solid var(--rule); }
-  .code .where { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+  .code .where { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
   .code pre { margin: 0; padding: 14px 16px; overflow-x: auto; font-family: var(--font-mono); font-size: 13px; line-height: 1.6; }
   .code pre .c { color: var(--muted); }
-  .copy { font-family: var(--font-mono); font-size: 11px; color: var(--muted); background: transparent; border: 1px solid var(--rule-strong); border-radius: 4px; padding: 2px 8px; cursor: pointer; }
+  .copy { font-family: var(--font-mono); font-size: 12px; color: var(--muted); background: transparent; border: 1px solid var(--rule-strong); border-radius: 4px; padding: 2px 8px; cursor: pointer; }
   .copy:hover { color: var(--ink); border-color: var(--ink); }
   .copy:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
   /* Tables */
   .tbl { overflow-x: auto; margin: 10px 0 20px; border: 1px solid var(--rule-strong); border-radius: 6px; }
   table { width: 100%; border-collapse: collapse; font-size: 14px; }
-  th { text-align: left; font-family: var(--font-mono); font-size: 10.5px; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); background: var(--panel); }
+  th { text-align: left; font-family: var(--font-mono); font-size: 12px; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); background: var(--panel); }
   th, td { padding: 9px 14px; border-bottom: 1px solid var(--rule); vertical-align: top; }
   tr:last-child td { border-bottom: 0; }
   td.k { white-space: nowrap; font-weight: 600; }
-  .state { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.08em; border-radius: 3px; padding: 1px 6px; white-space: nowrap; }
+  .state { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.08em; border-radius: 3px; padding: 1px 6px; white-space: nowrap; }
   .state.now { border: 1px solid var(--ink); }
   .state.next { border: 1px dashed var(--rule-strong); color: var(--muted); }
 
@@ -137,7 +137,7 @@
   .pager { display: flex; justify-content: space-between; gap: 16px; margin-top: 56px; padding-top: 20px; border-top: 1px solid var(--rule); font-size: 14px; }
   .pager a { text-decoration: none; border: 1px solid var(--rule-strong); border-radius: 6px; padding: 10px 14px; }
   .pager a:hover { border-color: var(--ink); }
-  .pager small { display: block; color: var(--muted); font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase; }
+  .pager small { display: block; color: var(--muted); font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; }
 
 
   /* Concept figure: the SVG's own colors are mapped to the page tokens, so it follows the theme. */
@@ -160,7 +160,7 @@
   .parts { display: grid; grid-template-columns: 168px minmax(0,1fr); border: 1px solid var(--rule-strong); border-radius: 6px; margin: 10px 0 20px; }
   .parts dt, .parts dd { margin: 0; padding: 10px 14px; border-bottom: 1px solid var(--rule); }
   .parts dt { font-weight: 600; }
-  .parts dt small { display: block; font-family: var(--font-mono); font-size: 11.5px; font-weight: 400; color: var(--muted); }
+  .parts dt small { display: block; font-family: var(--font-mono); font-size: 12px; font-weight: 400; color: var(--muted); }
   .parts dt:nth-last-of-type(1), .parts dd:last-of-type { border-bottom: 0; }
   ol.flowlist { margin: 0 0 16px; padding-left: 22px; }
   ol.flowlist li { margin-bottom: 6px; padding-left: 4px; }
