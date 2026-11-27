@@ -4,3 +4,5 @@ tmp/
 /bin/wt
 /wt/target/
 dist/
+docs/videos/src/*-raw.mp4
+docs/videos/src/sfx/

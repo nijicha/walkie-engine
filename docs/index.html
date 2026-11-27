@@ -107,6 +107,9 @@
   .step h3 { padding-top: 2px; scroll-margin-top: 72px; }
 
   /* Code */
+  .clip { margin: 12px 0 20px; }
+  .clip video { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; border-radius: 8px; border: 1px solid var(--rule-strong); background: #1f1f1f; }
+  .clip figcaption { margin-top: 6px; font-size: 13px; color: var(--muted); }
   .code { position: relative; margin: 10px 0 16px; border: 1px solid var(--rule-strong); border-radius: 6px; background: var(--code-bg); }
   .code .bar { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 8px 6px 14px; border-bottom: 1px solid var(--rule); }
   .code .where { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
@@ -443,6 +446,10 @@
     </div>
 
     <h2 id="install">Install</h2>
+    <figure class="clip">
+      <video controls muted playsinline preload="none" poster="videos/install.jpg" src="videos/install.mp4"></video>
+      <figcaption>A real fresh install on an Apple Silicon Mac, start to finish (1:27, the smoke test sped up).</figcaption>
+    </figure>
     <ol class="steps" style="list-style:none">
       <li class="step">
         <h3 id="step-engine">Install the engine</h3>
@@ -498,6 +505,10 @@ walkie smoke</code></pre>
           <pre><code>Make a walkie of PR #482: guests can now edit the name on their ticket.
 The app starts with bin/dev at http://localhost:3000.</code></pre>
         </div>
+        <figure class="clip">
+          <video controls muted playsinline preload="none" poster="videos/getting-started.jpg" src="videos/getting-started.mp4"></video>
+          <figcaption>A real session in a small demo app: ask, approve the storyboard, approve the contact sheet, get the MP4 and the PR text (1:53, the waits sped up).</figcaption>
+        </figure>
         <p>Claude hands the job to the <code>walkie</code> subagent, which runs on Sonnet in a fresh context. It stops twice for your answer:</p>
         <div class="flow">
           <div><p class="label">Write</p>Storyboard: one scene per step, Thai narration checked for pace</div>
