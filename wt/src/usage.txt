@@ -3,5 +3,5 @@ usage:
   wt mix content RAW DIR | compose DIR OUT.mp4 | remix VIDEO.mp4 OUT.mp4 DIR | backdrops DIR
   wt frames VIDEO.mp4 DIR OUT.png
   wt device record DIR REPO [DEVICE] | config DIR | collect LOG DIR
-  wt tts DEMO_DIR < narration.tsv | th|en --setup | th|en OUT.wav "text"
+  wt tts DEMO_DIR < narration.tsv | th|en --setup | th|en OUT.wav "text" | --list | --installed
   wt g2p [LEXICON.json] < lines

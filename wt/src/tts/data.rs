@@ -83,13 +83,46 @@ fn fetch(url: &str, sha: &str, path: &Path) -> Result<PathBuf> {
 /// A file of the voice model: from the Hugging Face cache when it has this revision, else
 /// downloaded into ours.
 pub fn model_file((file, sha): (&str, &str)) -> Result<PathBuf> {
-    let hf_home = std::env::var("HF_HOME").map(PathBuf::from).unwrap_or_else(|_| home().join(".cache/huggingface"));
-    let hf = hf_home.join("hub/models--pythainlp--MakHamTTS/snapshots").join(HF_REV).join(file);
+    let (hf, ours) = model_paths(file);
     if hf.exists() {
         return Ok(hf);
     }
     let url = format!("https://huggingface.co/{HF_REPO}/resolve/{HF_REV}/{file}");
-    fetch(&url, sha, &cache().join(format!("makham-{}", &HF_REV[..8])).join(file))
+    fetch(&url, sha, &ours)
+}
+
+fn hf_hub() -> PathBuf {
+    std::env::var("HF_HOME").map(PathBuf::from).unwrap_or_else(|_| home().join(".cache/huggingface")).join("hub")
+}
+
+/// Where a MakHam file is: the Hugging Face cache (from the Python version), or ours.
+fn model_paths(file: &str) -> (PathBuf, PathBuf) {
+    (
+        hf_hub().join("models--pythainlp--MakHamTTS/snapshots").join(HF_REV).join(file),
+        cache().join(format!("makham-{}", &HF_REV[..8])).join(file),
+    )
+}
+
+/// Whether a language's files are all here already (no download): the default model, and for
+/// Thai the G2P data and the word list, for English the tokenizer and the default speaker.
+pub fn installed(language: &str) -> bool {
+    match language {
+        "th" => {
+            let files = model("makham_female").unwrap();
+            let have = |f: &str| {
+                let (hf, ours) = model_paths(f);
+                hf.exists() || ours.exists()
+            };
+            let g2p = cache().join(format!("fastthaig2p-{}", &G2P_COMMIT[..8]));
+            have(files.onnx.0) && have(files.config.0) && g2p.join("ipa.json").exists() && g2p.join("fallback/sylseg.3g").exists()
+                && cache().join("pythainlp-5.4.0/words_th.txt").exists()
+        }
+        "en" => {
+            let have = |f: &str| kokoro_paths(f).0.exists() || kokoro_paths(f).1.exists();
+            have(kokoro_model("kokoro").unwrap().0) && have(KOKORO_TOKENIZER.0) && have(&kokoro_speaker("af_heart").unwrap().0)
+        }
+        _ => false,
+    }
 }
 
 /// FastThaiG2P's data folder (dict.txt, ipa.json, fallback/).
@@ -162,11 +195,28 @@ pub const KOKORO_TOKENIZER: (&str, &str) = ("tokenizer.json", "77a02c8e164413299
 
 /// A file of the Kokoro model, from the Hugging Face cache when it has this revision.
 pub fn kokoro_file(file: &str, sha: &str) -> Result<PathBuf> {
-    let hf_home = std::env::var("HF_HOME").map(PathBuf::from).unwrap_or_else(|_| home().join(".cache/huggingface"));
-    let hf = hf_home.join("hub/models--onnx-community--Kokoro-82M-v1.0-ONNX/snapshots").join(KOKORO_REV).join(file);
+    let (hf, ours) = kokoro_paths(file);
     if hf.exists() {
         return Ok(hf);
     }
     let url = format!("https://huggingface.co/{KOKORO_REPO}/resolve/{KOKORO_REV}/{file}");
-    fetch(&url, sha, &cache().join(format!("kokoro-{}", &KOKORO_REV[..8])).join(file))
+    fetch(&url, sha, &ours)
+}
+
+fn kokoro_paths(file: &str) -> (PathBuf, PathBuf) {
+    (
+        hf_hub().join("models--onnx-community--Kokoro-82M-v1.0-ONNX/snapshots").join(KOKORO_REV).join(file),
+        cache().join(format!("kokoro-{}", &KOKORO_REV[..8])).join(file),
+    )
+}
+
+/// The voices `walkie setup` offers: code, language, engine, default model, download size.
+pub const LANGUAGES: [(&str, &str, &str, &str, &str); 2] = [
+    ("th", "Thai", "MakHam", "makham_female (int8)", "110 MB"),
+    ("en", "English (US)", "Kokoro-82M", "kokoro (int8), speaker af_heart", "93 MB"),
+];
+
+/// Where the voices are kept.
+pub fn cache_dir() -> PathBuf {
+    cache()
 }

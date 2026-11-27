@@ -378,9 +378,15 @@ fn lexicon(voice: &Value) -> IndexMap<String, String> {
 }
 
 pub fn main(args: &[String]) -> Result<()> {
-    const USAGE: &str = "usage: wt tts DEMO_DIR < DEMO_DIR/narration.tsv | wt tts th|en --setup | wt tts th|en OUT.wav \"text\"";
+    const USAGE: &str = "usage: wt tts DEMO_DIR < DEMO_DIR/narration.tsv | wt tts th|en --setup | wt tts th|en OUT.wav \"text\" | wt tts --list | --installed";
     match args {
         [flag] if flag == "--setup" => setup("th"),
+        [flag] if flag == "--list" => list(),
+        [flag] if flag == "--installed" => {
+            let langs: Vec<&str> = data::LANGUAGES.iter().map(|l| l.0).filter(|l| data::installed(l)).collect();
+            println!("{}", langs.join(" "));
+            Ok(())
+        }
         [lang, flag] if flag == "--setup" => setup(lang),
         [lang, out, text] if ["th", "en"].contains(&lang.as_str()) => say(lang, Path::new(out), text),
         [dir] if !["th", "en"].contains(&dir.as_str()) => synthesize(Path::new(dir)),
@@ -477,6 +483,25 @@ fn synthesize(demo_dir: &Path) -> Result<()> {
         println!("{name}\t{seconds:.2}s\t{rate:.1}/s\t{}\t{}", said.phonemes, flags(voice, &said, seconds, speaker.is_thai()));
     }
     std::fs::write(&durations_file, to_json_indent1(&Value::Object(durations)))?;
+    Ok(())
+}
+
+/// The voices, whether each is installed, and where they are kept. Checks files only: downloads nothing.
+fn list() -> Result<()> {
+    let rows: Vec<[String; 6]> = data::LANGUAGES
+        .iter()
+        .map(|(code, name, engine, model, size)| {
+            let status = if data::installed(code) { "installed" } else { "not installed" };
+            [code.to_string(), name.to_string(), engine.to_string(), model.to_string(), size.to_string(), status.to_string()]
+        })
+        .collect();
+    let head = ["LANG", "LANGUAGE", "ENGINE", "MODEL", "SIZE", "STATUS"].map(String::from);
+    let widths: Vec<usize> = (0..6).map(|i| std::iter::once(&head).chain(&rows).map(|r| r[i].chars().count()).max().unwrap_or(0)).collect();
+    for row in std::iter::once(&head).chain(&rows) {
+        let cells: Vec<String> = row.iter().zip(&widths).map(|(c, w)| format!("{c:<w$}")).collect();
+        println!("{}", cells.join("  ").trim_end());
+    }
+    println!("\nKept in {}", data::cache_dir().display());
     Ok(())
 }
 

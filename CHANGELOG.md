@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.1-alpha
+
+- `walkie setup` asks which voices to set up (Thai, English), listing each with its size and whether it is installed. In a script, it keeps the voices already installed, or Thai.
+- `walkie setup th en` sets up only the voices named; `walkie setup list` shows them without downloading anything.
+- `walkie say th|en out.wav "text"` says one line with a language's default voice. Everything a user types is now a `walkie` command.
+
 ## 0.2.0-alpha
 
 - English narration. A profile with `"language": "en"` in its `voice.json` is voiced by Kokoro-82M (US English, int8, on the CPU) and starts from the new `profiles/default/voice.en.json`. Pick a speaker with `"speaker"`: `af_heart` (default), `af_bella`, `af_nicole`, `af_sarah`, `am_michael`, `am_fenrir` or `am_puck`.
