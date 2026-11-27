@@ -1,0 +1,76 @@
+{
+  "colors": {
+    "primary": "#111111",
+    "on_primary": "#f6f6f3",
+    "emphasis": "#ff4f00",
+    "highlight": "#ff4f00",
+    "warn": "#c2410c",
+    "card_background": "#ebebe8",
+    "card_text": "#111111",
+    "card_wash": "#e3e3df"
+  },
+  "fonts": {
+    "sans": {
+      "medium": "fonts/Prompt-Medium.woff2",
+      "bold": "fonts/Prompt-Bold.woff2"
+    }
+  },
+  "layout": {
+    "video": [
+      1280,
+      720
+    ],
+    "zoom": 1.5,
+    "shape": "square",
+    "caption": {
+      "position": "bottom",
+      "size": 32,
+      "margin": 28
+    },
+    "card": {
+      "tag": 24,
+      "title": 64,
+      "text": 30,
+      "list": 32
+    },
+    "highlight": {
+      "width": 4,
+      "radius": 0,
+      "pad": 8
+    },
+    "spotlight": {
+      "dim": 0.35,
+      "fade_ms": 400
+    },
+    "focus_zoom": {
+      "scale": 1.6,
+      "ms": 600
+    },
+    "fade_ms": 600,
+    "device": {
+      "side": "left",
+      "margin": 40,
+      "radius": 36,
+      "bezel": 6,
+      "caption_size": 40,
+      "zoom_scale": 2.2
+    }
+  },
+  "hide": [],
+  "cards": {
+    "all": {
+      "align": "left",
+      "padding_x": 140,
+      "tag": "top",
+      "logo": null,
+      "logo_position": "top-left",
+      "logo_height": 56,
+      "background": null,
+      "background_image": null
+    },
+    "intro": {},
+    "chapter": {},
+    "summary": {},
+    "outro": {}
+  }
+}

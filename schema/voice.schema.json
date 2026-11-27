@@ -1,0 +1,94 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "$id": "https://github.com/nijicha/walkie-engine/schema/voice.schema.json",
+ "title": "Voice",
+ "description": "Text to speech for the narration. A profile file lists only what it changes: every field is optional and falls back to profiles/default.",
+ "type": "object",
+ "additionalProperties": false,
+ "properties": {
+  "$schema": {
+   "type": "string"
+  },
+  "engine": {
+   "type": "string",
+   "enum": [
+    "makham"
+   ],
+   "default": "makham",
+   "description": "TTS engine. makham speaks Thai."
+  },
+  "language": {
+   "type": "string",
+   "enum": [
+    "th"
+   ],
+   "default": "th"
+  },
+  "model": {
+   "type": "string",
+   "enum": [
+    "makham_female",
+    "paradee"
+   ],
+   "default": "makham_female",
+   "description": "makham_female sounds natural; paradee is faster with a metallic buzz, for drafts."
+  },
+  "speed": {
+   "type": "number",
+   "description": "Speaking speed (1 = the model's own).",
+   "default": 1.2,
+   "minimum": 0.7,
+   "maximum": 1.6,
+   "x-step": 0.05
+  },
+  "phrase_gap": {
+   "type": "number",
+   "description": "Pause at each space in the narration.",
+   "default": 0.12,
+   "minimum": 0,
+   "maximum": 0.6,
+   "x-unit": "s",
+   "x-step": 0.01
+  },
+  "max_rate": {
+   "type": "number",
+   "description": "Syllables per second above which a line gets the FAST flag.",
+   "default": 4.3,
+   "minimum": 3,
+   "maximum": 6,
+   "x-step": 0.1
+  },
+  "eq": {
+   "type": "string",
+   "default": "highshelf=f=7000:g=-4,lowpass=f=11000",
+   "description": "ffmpeg audio filter applied to every clip. Empty for none."
+  },
+  "breath": {
+   "type": "string",
+   "enum": [
+    "cut",
+    "soften",
+    "keep"
+   ],
+   "default": "cut",
+   "description": "The inhale the model starts each phrase with."
+  },
+  "breath_db": {
+   "type": "integer",
+   "description": "Breath level with breath = soften.",
+   "default": -18,
+   "minimum": -40,
+   "maximum": 0,
+   "x-unit": "dB"
+  },
+  "lexicon": {
+   "type": "object",
+   "default": {},
+   "additionalProperties": {
+    "type": "string"
+   },
+   "description": "Word -> phonemes, for words the G2P cannot reach (e.g. สปาร์ก -> sa↓.paːk↑).",
+   "x-control": "lexicon"
+  }
+ }
+}

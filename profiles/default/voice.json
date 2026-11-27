@@ -1,0 +1,12 @@
+{
+  "engine": "makham",
+  "language": "th",
+  "model": "makham_female",
+  "speed": 1.2,
+  "phrase_gap": 0.12,
+  "max_rate": 4.3,
+  "eq": "highshelf=f=7000:g=-4,lowpass=f=11000",
+  "breath": "cut",
+  "breath_db": -18,
+  "lexicon": {}
+}

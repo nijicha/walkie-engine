@@ -1,0 +1,84 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "$id": "https://github.com/nijicha/walkie-engine/schema/profile.schema.json",
+ "title": "Profile",
+ "description": "Which repos use the profile, and where walkies are made.",
+ "type": "object",
+ "additionalProperties": false,
+ "properties": {
+  "$schema": {
+   "type": "string"
+  },
+  "name": {
+   "type": "string",
+   "description": "The profile's name. Defaults to its folder name."
+  },
+  "match": {
+   "type": "array",
+   "items": {
+    "type": "string"
+   },
+   "default": [],
+   "description": "Git remote globs (host/owner/name, e.g. github.com/acme/*) that pick this profile."
+  },
+  "allow": {
+   "type": "array",
+   "items": {
+    "type": "string"
+   },
+   "description": "If set, the only remotes that may use this profile."
+  },
+  "work_dir": {
+   "type": "string",
+   "default": "tmp/demo",
+   "description": "Folder in the repo for walkie work. Must be gitignored."
+  },
+  "template": {
+   "type": "string",
+   "default": "template.spec.ts",
+   "description": "Spec template, relative to the profile folder. A .spec.ts for browser recordings, a _test.dart for flutter ones; when it does not fit the runner, the engine's own template is used."
+  },
+  "record": {
+   "type": "object",
+   "description": "Recording.",
+   "additionalProperties": false,
+   "properties": {
+    "base_url": {
+     "type": [
+      "string",
+      "null"
+     ],
+     "default": null,
+     "description": "Where the app runs while recording."
+    },
+    "runner": {
+     "enum": [
+      "auto",
+      "browser",
+      "flutter"
+     ],
+     "default": "auto",
+     "description": "What records the app. browser: Playwright and Chromium (demo.spec.ts). flutter: an integration test on an iOS Simulator or Android emulator, with the screen recorded (demo_test.dart). auto: flutter when app_dir has a Flutter pubspec.yaml, else browser."
+    },
+    "app_dir": {
+     "type": "string",
+     "default": ".",
+     "description": "flutter: the Flutter app's folder, relative to the repo root."
+    },
+    "device": {
+     "type": [
+      "string",
+      "null"
+     ],
+     "default": null,
+     "description": "flutter: the simulator or emulator to record on (name, iOS UDID or Android serial). null: the one running, else the first iPhone simulator."
+    },
+    "flutter": {
+     "type": "string",
+     "default": "flutter",
+     "description": "flutter: the command that runs Flutter in this repo, e.g. \"puro flutter\" or \"fvm flutter\"."
+    }
+   }
+  }
+ }
+}

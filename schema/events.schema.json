@@ -1,0 +1,346 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "$id": "https://github.com/nijicha/walkie-engine/schema/events.schema.json",
+ "title": "Overlay events",
+ "description": "events.json: the overlay and text layers of a recording, logged by the Demo kit and drawn by render.ts. t is seconds from time zero; coordinates are px of the recorded page (viewport).",
+ "type": "object",
+ "required": [
+  "version",
+  "viewport",
+  "events"
+ ],
+ "properties": {
+  "version": {
+   "const": 1
+  },
+  "viewport": {
+   "type": "object",
+   "properties": {
+    "width": {
+     "type": "number"
+    },
+    "height": {
+     "type": "number"
+    }
+   },
+   "required": [
+    "width",
+    "height"
+   ]
+  },
+  "events": {
+   "type": "array",
+   "items": {
+    "oneOf": [
+     {
+      "type": "object",
+      "properties": {
+       "t": {
+        "type": "number"
+       },
+       "type": {
+        "const": "caption"
+       },
+       "id": {
+        "type": "string",
+        "description": "Text layer id (step-N, caption-N); none for clearing."
+       },
+       "html": {
+        "type": "string"
+       }
+      },
+      "required": [
+       "t",
+       "type",
+       "html"
+      ]
+     },
+     {
+      "type": "object",
+      "properties": {
+       "t": {
+        "type": "number"
+       },
+       "type": {
+        "const": "box"
+       },
+       "rect": {
+        "type": [
+         "object",
+         "null"
+        ],
+        "properties": {
+         "x": {
+          "type": "number"
+         },
+         "y": {
+          "type": "number"
+         },
+         "w": {
+          "type": "number"
+         },
+         "h": {
+          "type": "number"
+         }
+        },
+        "required": [
+         "x",
+         "y",
+         "w",
+         "h"
+        ]
+       },
+       "spot": {
+        "type": "boolean"
+       },
+       "pad": {
+        "type": "number"
+       }
+      },
+      "required": [
+       "t",
+       "type",
+       "rect"
+      ]
+     },
+     {
+      "type": "object",
+      "properties": {
+       "t": {
+        "type": "number"
+       },
+       "type": {
+        "const": "box-move"
+       },
+       "rect": {
+        "type": [
+         "object",
+         "null"
+        ],
+        "properties": {
+         "x": {
+          "type": "number"
+         },
+         "y": {
+          "type": "number"
+         },
+         "w": {
+          "type": "number"
+         },
+         "h": {
+          "type": "number"
+         }
+        },
+        "required": [
+         "x",
+         "y",
+         "w",
+         "h"
+        ]
+       }
+      },
+      "required": [
+       "t",
+       "type",
+       "rect"
+      ]
+     },
+     {
+      "type": "object",
+      "properties": {
+       "t": {
+        "type": "number"
+       },
+       "type": {
+        "const": "cursor"
+       },
+       "x": {
+        "type": "number"
+       },
+       "y": {
+        "type": "number"
+       }
+      },
+      "required": [
+       "t",
+       "type",
+       "x",
+       "y"
+      ]
+     },
+     {
+      "type": "object",
+      "properties": {
+       "t": {
+        "type": "number"
+       },
+       "type": {
+        "const": "press"
+       },
+       "down": {
+        "type": "boolean"
+       }
+      },
+      "required": [
+       "t",
+       "type",
+       "down"
+      ]
+     },
+     {
+      "type": "object",
+      "properties": {
+       "t": {
+        "type": "number"
+       },
+       "type": {
+        "const": "cursor-visible"
+       },
+       "on": {
+        "type": "boolean"
+       }
+      },
+      "required": [
+       "t",
+       "type",
+       "on"
+      ]
+     },
+     {
+      "type": "object",
+      "properties": {
+       "t": {
+        "type": "number"
+       },
+       "type": {
+        "const": "veil"
+       },
+       "on": {
+        "type": "boolean"
+       }
+      },
+      "required": [
+       "t",
+       "type",
+       "on"
+      ]
+     },
+     {
+      "type": "object",
+      "properties": {
+       "t": {
+        "type": "number"
+       },
+       "type": {
+        "const": "card"
+       },
+       "id": {
+        "type": "string"
+       },
+       "html": {
+        "type": "string"
+       },
+       "kind": {
+        "enum": [
+         "intro",
+         "chapter",
+         "summary",
+         "outro"
+        ]
+       },
+       "instant": {
+        "type": "boolean"
+       }
+      },
+      "required": [
+       "t",
+       "type",
+       "id",
+       "html"
+      ]
+     },
+     {
+      "type": "object",
+      "properties": {
+       "t": {
+        "type": "number"
+       },
+       "type": {
+        "const": "card-hide"
+       }
+      },
+      "required": [
+       "t",
+       "type"
+      ]
+     },
+     {
+      "type": "object",
+      "properties": {
+       "t": {
+        "type": "number"
+       },
+       "type": {
+        "const": "card-remove"
+       }
+      },
+      "required": [
+       "t",
+       "type"
+      ]
+     },
+     {
+      "type": "object",
+      "description": "device only: the part of the screen the page layer shows from t on (zoom), reached over ms. Box and cursor events are already where the element sits in that view.",
+      "properties": {
+       "t": {
+        "type": "number"
+       },
+       "type": {
+        "const": "camera"
+       },
+       "rect": {
+        "type": "object",
+        "properties": {
+         "x": {
+          "type": "number"
+         },
+         "y": {
+          "type": "number"
+         },
+         "w": {
+          "type": "number"
+         },
+         "h": {
+          "type": "number"
+         }
+        },
+        "required": [
+         "x",
+         "y",
+         "w",
+         "h"
+        ]
+       },
+       "ms": {
+        "type": "number"
+       }
+      },
+      "required": [
+       "t",
+       "type",
+       "rect"
+      ]
+     }
+    ]
+   }
+  },
+  "source": {
+   "enum": [
+    "browser",
+    "device"
+   ],
+   "description": "What recorded the page layer: Playwright (browser, the default) or a phone simulator or emulator (device: the screen sits in a column beside a text panel, see theme layout.device)."
+  }
+ }
+}

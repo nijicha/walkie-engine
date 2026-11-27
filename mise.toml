@@ -1,0 +1,4 @@
+# Tool versions for walkie. Rust builds bin/wt (`walkie setup`).
+[tools]
+node = "26"
+rust = "1.100.0"

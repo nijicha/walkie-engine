@@ -1,0 +1,9 @@
+{
+  "intro": true,
+  "chapter": false,
+  "summary": true,
+  "outro": false,
+  "step_numbers": true,
+  "chapter_ms": 2000,
+  "outro_html": ""
+}

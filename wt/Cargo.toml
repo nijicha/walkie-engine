@@ -1,0 +1,33 @@
+[package]
+name = "wt"
+version = "0.1.0"
+edition = "2024"
+description = "walkie engine tools: profile, layers (mix), contact sheet (frames), phone recording (device), Thai TTS"
+license = "MIT"
+publish = false
+
+[[bin]]
+name = "wt"
+path = "src/main.rs"
+
+[dependencies]
+anyhow = "1.0.105"
+serde = "1"
+serde_json = { version = "1.0.154", features = ["preserve_order"] }
+indexmap = "2.14.2"
+regex = "1.13.2"
+fancy-regex = "0.20.2"
+shlex = "2.0.1"
+libc = "0.2.191"
+tempfile = "3.27.0"
+encoding_rs = "0.8.44"
+ort = { version = "=2.0.0-rc.15", default-features = false, features = ["std", "download-binaries", "tls-rustls", "api-31"] }
+realfft = "3.5.1"
+hound = "3.5.1"
+ureq = "3.5.2"
+zip = { version = "9.8.2", default-features = false, features = ["deflate"] }
+sha2 = "0.11.2"
+
+[profile.release]
+opt-level = 3
+lto = "thin"

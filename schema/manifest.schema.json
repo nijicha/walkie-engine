@@ -1,0 +1,155 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "$id": "https://github.com/nijicha/walkie-engine/schema/manifest.schema.json",
+ "title": "Video manifest",
+ "description": "manifest.json in each library folder, written by record.",
+ "type": "object",
+ "required": [
+  "schema_version",
+  "id",
+  "name",
+  "repo",
+  "created_at",
+  "duration_s"
+ ],
+ "properties": {
+  "schema_version": {
+   "enum": [
+    1,
+    2
+   ],
+   "description": "2: layered (content.mp4, events.json, voice/), so rerender and revoice work. 1: a flat MP4 only."
+  },
+  "id": {
+   "type": "string",
+   "description": "<repo folder>--<name>; also the library folder name."
+  },
+  "name": {
+   "type": "string"
+  },
+  "title": {
+   "type": [
+    "string",
+    "null"
+   ]
+  },
+  "pr": {
+   "type": [
+    "string",
+    "null"
+   ]
+  },
+  "repo": {
+   "type": "string",
+   "description": "Git remote URL, or the repo path when it has none."
+  },
+  "repo_path": {
+   "type": "string"
+  },
+  "branch": {
+   "type": "string"
+  },
+  "commit": {
+   "type": "string"
+  },
+  "profile": {
+   "type": "string"
+  },
+  "created_at": {
+   "type": "string",
+   "format": "date-time"
+  },
+  "duration_s": {
+   "type": "number"
+  },
+  "flashes": {
+   "type": "integer",
+   "minimum": 0
+  },
+  "clips": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+     "name": {
+      "type": "string"
+     },
+     "start": {
+      "type": "number"
+     }
+    },
+    "required": [
+     "name",
+     "start"
+    ]
+   },
+   "description": "When each narration clip starts, in seconds."
+  },
+  "usage": {
+   "oneOf": [
+    {
+     "type": "null"
+    },
+    {
+     "type": "object",
+     "description": "Tokens the agent spent, from its Claude Code transcripts.",
+     "additionalProperties": false,
+     "properties": {
+      "sessions": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       }
+      },
+      "from": {
+       "type": "string",
+       "format": "date-time"
+      },
+      "to": {
+       "type": "string",
+       "format": "date-time"
+      },
+      "calls": {
+       "type": "integer"
+      },
+      "models": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       }
+      },
+      "input": {
+       "type": "integer"
+      },
+      "cache_write": {
+       "type": "integer"
+      },
+      "cache_read": {
+       "type": "integer"
+      },
+      "output": {
+       "type": "integer"
+      }
+     }
+    }
+   ]
+  },
+  "files": {
+   "type": "array",
+   "items": {
+    "type": "string"
+   }
+  },
+  "revoiced_at": {
+   "type": "string",
+   "format": "date-time",
+   "description": "When revoice last changed a clip."
+  },
+  "rerendered_at": {
+   "type": "string",
+   "format": "date-time",
+   "description": "When rerender last drew the overlay again."
+  }
+ }
+}

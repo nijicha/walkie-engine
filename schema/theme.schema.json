@@ -1,0 +1,762 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "$id": "https://github.com/nijicha/walkie-engine/schema/theme.schema.json",
+ "title": "Theme",
+ "description": "How the overlay looks: colors, fonts, sizes and motion. Sizes are pixels of the final video. A profile file lists only what it changes: every field is optional and falls back to profiles/default.",
+ "type": "object",
+ "additionalProperties": false,
+ "properties": {
+  "$schema": {
+   "type": "string"
+  },
+  "colors": {
+   "type": "object",
+   "description": "Overlay colors.",
+   "additionalProperties": false,
+   "properties": {
+    "primary": {
+     "type": "string",
+     "pattern": "^#([0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+     "x-control": "color",
+     "description": "Caption bar background and the summary card title.",
+     "default": "#111111"
+    },
+    "on_primary": {
+     "type": "string",
+     "pattern": "^#([0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+     "x-control": "color",
+     "description": "Caption text on the primary color.",
+     "default": "#f6f6f3"
+    },
+    "emphasis": {
+     "type": "string",
+     "pattern": "^#([0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+     "x-control": "color",
+     "description": "Bold words in a caption, and the step number badge.",
+     "default": "#ff4f00"
+    },
+    "highlight": {
+     "type": "string",
+     "pattern": "^#([0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+     "x-control": "color",
+     "description": "The box around the element a scene points at, and the cursor.",
+     "default": "#ff4f00"
+    },
+    "warn": {
+     "type": "string",
+     "pattern": "^#([0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+     "x-control": "color",
+     "description": "Caution items (li.warn) on cards.",
+     "default": "#c2410c"
+    },
+    "card_background": {
+     "type": "string",
+     "pattern": "^#([0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+     "x-control": "color",
+     "description": "Full-screen card background, and the navigation veil.",
+     "default": "#ebebe8"
+    },
+    "card_text": {
+     "type": "string",
+     "pattern": "^#([0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+     "x-control": "color",
+     "description": "Card text.",
+     "default": "#111111"
+    },
+    "card_wash": {
+     "type": "string",
+     "pattern": "^#([0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+     "x-control": "color",
+     "description": "Card tag band and the summary list plate.",
+     "default": "#e3e3df"
+    }
+   }
+  },
+  "fonts": {
+   "type": "object",
+   "description": "Font files, relative to the profile folder (woff2). Monospace is the engine's Caskaydia and cannot be changed.",
+   "additionalProperties": false,
+   "properties": {
+    "sans": {
+     "type": "object",
+     "description": "The overlay's font.",
+     "additionalProperties": false,
+     "properties": {
+      "medium": {
+       "type": "string",
+       "description": "Weight 500: captions, card text.",
+       "default": "fonts/Prompt-Medium.woff2",
+       "x-control": "font-file"
+      },
+      "bold": {
+       "type": "string",
+       "description": "Weight 700: titles, emphasis.",
+       "default": "fonts/Prompt-Bold.woff2",
+       "x-control": "font-file"
+      }
+     }
+    }
+   }
+  },
+  "layout": {
+   "type": "object",
+   "description": "Sizes and motion.",
+   "additionalProperties": false,
+   "properties": {
+    "video": {
+     "type": "array",
+     "description": "Final video size, width and height.",
+     "default": [
+      1280,
+      720
+     ],
+     "prefixItems": [
+      {
+       "type": "integer",
+       "description": "Width",
+       "default": 1280,
+       "minimum": 640,
+       "maximum": 3840,
+       "x-unit": "px"
+      },
+      {
+       "type": "integer",
+       "description": "Height",
+       "default": 720,
+       "minimum": 360,
+       "maximum": 2160,
+       "x-unit": "px"
+      }
+     ],
+     "items": false,
+     "minItems": 2
+    },
+    "zoom": {
+     "type": "number",
+     "description": "Browser zoom the page is shown at (1.5 = 150 %). Higher shows less of the page, larger.",
+     "default": 1.5,
+     "minimum": 1,
+     "maximum": 2.5,
+     "x-step": 0.1
+    },
+    "shape": {
+     "type": "string",
+     "enum": [
+      "square",
+      "round"
+     ],
+     "default": "square",
+     "description": "Corners and labels. square: the technical-document look (square caption bar, step badge and list plate; tag band in capitals under a rule). round: rounded bar and plate, round step badge."
+    },
+    "caption": {
+     "type": "object",
+     "description": "Caption bar.",
+     "additionalProperties": false,
+     "properties": {
+      "position": {
+       "type": "string",
+       "enum": [
+        "bottom",
+        "top"
+       ],
+       "default": "bottom",
+       "description": "Edge of the screen it sits on."
+      },
+      "size": {
+       "type": "integer",
+       "description": "Text size.",
+       "default": 32,
+       "minimum": 16,
+       "maximum": 64,
+       "x-unit": "px"
+      },
+      "margin": {
+       "type": "integer",
+       "description": "Distance from the edge.",
+       "default": 28,
+       "minimum": 0,
+       "maximum": 120,
+       "x-unit": "px"
+      }
+     }
+    },
+    "card": {
+     "type": "object",
+     "description": "Text sizes on full-screen cards.",
+     "additionalProperties": false,
+     "properties": {
+      "tag": {
+       "type": "integer",
+       "description": "Tag band (ticket, team).",
+       "default": 24,
+       "minimum": 12,
+       "maximum": 48,
+       "x-unit": "px"
+      },
+      "title": {
+       "type": "integer",
+       "description": "Title (h1).",
+       "default": 64,
+       "minimum": 24,
+       "maximum": 96,
+       "x-unit": "px"
+      },
+      "text": {
+       "type": "integer",
+       "description": "Paragraph.",
+       "default": 30,
+       "minimum": 16,
+       "maximum": 56,
+       "x-unit": "px"
+      },
+      "list": {
+       "type": "integer",
+       "description": "Summary list items.",
+       "default": 32,
+       "minimum": 16,
+       "maximum": 56,
+       "x-unit": "px"
+      }
+     }
+    },
+    "highlight": {
+     "type": "object",
+     "description": "The highlight box.",
+     "additionalProperties": false,
+     "properties": {
+      "width": {
+       "type": "integer",
+       "description": "Border width.",
+       "default": 4,
+       "minimum": 1,
+       "maximum": 12,
+       "x-unit": "px"
+      },
+      "radius": {
+       "type": "integer",
+       "description": "Corner radius.",
+       "default": 0,
+       "minimum": 0,
+       "maximum": 32,
+       "x-unit": "px"
+      },
+      "pad": {
+       "type": "integer",
+       "description": "Space between the element and the box.",
+       "default": 8,
+       "minimum": 0,
+       "maximum": 32,
+       "x-unit": "px"
+      }
+     }
+    },
+    "spotlight": {
+     "type": "object",
+     "description": "Dimming the rest of the page around the box.",
+     "additionalProperties": false,
+     "properties": {
+      "dim": {
+       "type": "number",
+       "description": "Darkness of the dimmed area, 0 to 1.",
+       "default": 0.35,
+       "minimum": 0,
+       "maximum": 0.8,
+       "x-step": 0.05
+      },
+      "fade_ms": {
+       "type": "integer",
+       "description": "Fade time.",
+       "default": 400,
+       "minimum": 0,
+       "maximum": 2000,
+       "x-unit": "ms"
+      }
+     }
+    },
+    "focus_zoom": {
+     "type": "object",
+     "description": "Zooming the page around the box.",
+     "additionalProperties": false,
+     "properties": {
+      "scale": {
+       "type": "number",
+       "description": "Zoom factor.",
+       "default": 1.6,
+       "minimum": 1.1,
+       "maximum": 3,
+       "x-step": 0.1
+      },
+      "ms": {
+       "type": "integer",
+       "description": "Zoom time.",
+       "default": 600,
+       "minimum": 0,
+       "maximum": 2000,
+       "x-unit": "ms"
+      }
+     }
+    },
+    "fade_ms": {
+     "type": "integer",
+     "description": "Card fade time. Keep it 400 ms or more: a faster fade between a dark and a light screen flashes.",
+     "default": 600,
+     "minimum": 0,
+     "maximum": 2000,
+     "x-unit": "ms"
+    },
+    "device": {
+     "type": "object",
+     "description": "Mobile recordings (iOS Simulator, Android emulator): the phone screen sits in a column at one side of the video, the step caption in a text panel at the other.",
+     "additionalProperties": false,
+     "properties": {
+      "side": {
+       "enum": [
+        "left",
+        "right"
+       ],
+       "description": "Side the phone sits on.",
+       "default": "left"
+      },
+      "margin": {
+       "type": "integer",
+       "description": "Space above and below the phone.",
+       "default": 40,
+       "minimum": 0,
+       "maximum": 200,
+       "x-unit": "px"
+      },
+      "radius": {
+       "type": "integer",
+       "description": "Corner radius of the phone screen.",
+       "default": 36,
+       "minimum": 0,
+       "maximum": 120,
+       "x-unit": "px"
+      },
+      "bezel": {
+       "type": "integer",
+       "description": "Width of the frame line around the phone screen.",
+       "default": 6,
+       "minimum": 0,
+       "maximum": 30,
+       "x-unit": "px"
+      },
+      "caption_size": {
+       "type": "integer",
+       "description": "Text size of the step caption in the panel.",
+       "default": 40,
+       "minimum": 16,
+       "maximum": 96,
+       "x-unit": "px"
+      },
+      "zoom_scale": {
+       "type": "number",
+       "description": "Zoom factor of the phone screen around the box.",
+       "default": 2.2,
+       "minimum": 1.1,
+       "maximum": 4,
+       "x-step": 0.1
+      }
+     }
+    }
+   }
+  },
+  "hide": {
+   "type": "array",
+   "items": {
+    "type": "string"
+   },
+   "default": [],
+   "description": "CSS selectors of dev-only UI to hide in the video (toolbars, profilers)."
+  },
+  "cards": {
+   "type": "object",
+   "additionalProperties": false,
+   "description": "Card templates. `all` styles every card; intro, chapter, summary and outro override it field by field.",
+   "properties": {
+    "all": {
+     "type": "object",
+     "additionalProperties": false,
+     "properties": {
+      "align": {
+       "type": "string",
+       "enum": [
+        "center",
+        "left"
+       ],
+       "default": "left",
+       "description": "Text alignment on the card."
+      },
+      "padding_x": {
+       "type": "integer",
+       "minimum": 0,
+       "maximum": 400,
+       "default": 140,
+       "x-unit": "px",
+       "description": "Space on the left and right."
+      },
+      "tag": {
+       "type": "string",
+       "enum": [
+        "bottom",
+        "top",
+        "none"
+       ],
+       "default": "top",
+       "description": "Where the tag band (ticket, team) sits, or none."
+      },
+      "logo": {
+       "type": [
+        "string",
+        "null"
+       ],
+       "default": null,
+       "x-control": "image-file",
+       "description": "Logo image (SVG, PNG, JPEG, WebP), relative to the profile folder. Null for none."
+      },
+      "logo_position": {
+       "type": "string",
+       "enum": [
+        "top-left",
+        "top-right",
+        "bottom-left",
+        "bottom-right",
+        "above-title"
+       ],
+       "default": "top-left",
+       "description": "Where the logo sits."
+      },
+      "logo_height": {
+       "type": "integer",
+       "minimum": 16,
+       "maximum": 240,
+       "default": 56,
+       "x-unit": "px",
+       "description": "Logo height."
+      },
+      "background": {
+       "type": [
+        "string",
+        "null"
+       ],
+       "pattern": "^#([0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+       "x-control": "color",
+       "default": null,
+       "description": "Card background color. Null uses colors.card_background."
+      },
+      "background_image": {
+       "type": [
+        "string",
+        "null"
+       ],
+       "default": null,
+       "x-control": "image-file",
+       "description": "Background image, cover-fitted, relative to the profile folder. Null for none."
+      }
+     },
+     "description": "Every card."
+    },
+    "intro": {
+     "type": "object",
+     "additionalProperties": false,
+     "properties": {
+      "align": {
+       "type": "string",
+       "enum": [
+        "center",
+        "left"
+       ],
+       "description": "Text alignment on the card."
+      },
+      "padding_x": {
+       "type": "integer",
+       "minimum": 0,
+       "maximum": 400,
+       "x-unit": "px",
+       "description": "Space on the left and right."
+      },
+      "tag": {
+       "type": "string",
+       "enum": [
+        "bottom",
+        "top",
+        "none"
+       ],
+       "description": "Where the tag band (ticket, team) sits, or none."
+      },
+      "logo": {
+       "type": [
+        "string",
+        "null"
+       ],
+       "x-control": "image-file",
+       "description": "Logo image (SVG, PNG, JPEG, WebP), relative to the profile folder. Null for none."
+      },
+      "logo_position": {
+       "type": "string",
+       "enum": [
+        "top-left",
+        "top-right",
+        "bottom-left",
+        "bottom-right",
+        "above-title"
+       ],
+       "description": "Where the logo sits."
+      },
+      "logo_height": {
+       "type": "integer",
+       "minimum": 16,
+       "maximum": 240,
+       "x-unit": "px",
+       "description": "Logo height."
+      },
+      "background": {
+       "type": [
+        "string",
+        "null"
+       ],
+       "pattern": "^#([0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+       "x-control": "color",
+       "description": "Card background color. Null uses colors.card_background."
+      },
+      "background_image": {
+       "type": [
+        "string",
+        "null"
+       ],
+       "x-control": "image-file",
+       "description": "Background image, cover-fitted, relative to the profile folder. Null for none."
+      }
+     },
+     "description": "Opening card. Only the fields that differ from `all`.",
+     "default": {}
+    },
+    "chapter": {
+     "type": "object",
+     "additionalProperties": false,
+     "properties": {
+      "align": {
+       "type": "string",
+       "enum": [
+        "center",
+        "left"
+       ],
+       "description": "Text alignment on the card."
+      },
+      "padding_x": {
+       "type": "integer",
+       "minimum": 0,
+       "maximum": 400,
+       "x-unit": "px",
+       "description": "Space on the left and right."
+      },
+      "tag": {
+       "type": "string",
+       "enum": [
+        "bottom",
+        "top",
+        "none"
+       ],
+       "description": "Where the tag band (ticket, team) sits, or none."
+      },
+      "logo": {
+       "type": [
+        "string",
+        "null"
+       ],
+       "x-control": "image-file",
+       "description": "Logo image (SVG, PNG, JPEG, WebP), relative to the profile folder. Null for none."
+      },
+      "logo_position": {
+       "type": "string",
+       "enum": [
+        "top-left",
+        "top-right",
+        "bottom-left",
+        "bottom-right",
+        "above-title"
+       ],
+       "description": "Where the logo sits."
+      },
+      "logo_height": {
+       "type": "integer",
+       "minimum": 16,
+       "maximum": 240,
+       "x-unit": "px",
+       "description": "Logo height."
+      },
+      "background": {
+       "type": [
+        "string",
+        "null"
+       ],
+       "pattern": "^#([0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+       "x-control": "color",
+       "description": "Card background color. Null uses colors.card_background."
+      },
+      "background_image": {
+       "type": [
+        "string",
+        "null"
+       ],
+       "x-control": "image-file",
+       "description": "Background image, cover-fitted, relative to the profile folder. Null for none."
+      }
+     },
+     "description": "Cards between parts. Only the fields that differ from `all`.",
+     "default": {}
+    },
+    "summary": {
+     "type": "object",
+     "additionalProperties": false,
+     "properties": {
+      "align": {
+       "type": "string",
+       "enum": [
+        "center",
+        "left"
+       ],
+       "description": "Text alignment on the card."
+      },
+      "padding_x": {
+       "type": "integer",
+       "minimum": 0,
+       "maximum": 400,
+       "x-unit": "px",
+       "description": "Space on the left and right."
+      },
+      "tag": {
+       "type": "string",
+       "enum": [
+        "bottom",
+        "top",
+        "none"
+       ],
+       "description": "Where the tag band (ticket, team) sits, or none."
+      },
+      "logo": {
+       "type": [
+        "string",
+        "null"
+       ],
+       "x-control": "image-file",
+       "description": "Logo image (SVG, PNG, JPEG, WebP), relative to the profile folder. Null for none."
+      },
+      "logo_position": {
+       "type": "string",
+       "enum": [
+        "top-left",
+        "top-right",
+        "bottom-left",
+        "bottom-right",
+        "above-title"
+       ],
+       "description": "Where the logo sits."
+      },
+      "logo_height": {
+       "type": "integer",
+       "minimum": 16,
+       "maximum": 240,
+       "x-unit": "px",
+       "description": "Logo height."
+      },
+      "background": {
+       "type": [
+        "string",
+        "null"
+       ],
+       "pattern": "^#([0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+       "x-control": "color",
+       "description": "Card background color. Null uses colors.card_background."
+      },
+      "background_image": {
+       "type": [
+        "string",
+        "null"
+       ],
+       "x-control": "image-file",
+       "description": "Background image, cover-fitted, relative to the profile folder. Null for none."
+      }
+     },
+     "description": "Closing checklist card. Only the fields that differ from `all`.",
+     "default": {}
+    },
+    "outro": {
+     "type": "object",
+     "additionalProperties": false,
+     "properties": {
+      "align": {
+       "type": "string",
+       "enum": [
+        "center",
+        "left"
+       ],
+       "description": "Text alignment on the card."
+      },
+      "padding_x": {
+       "type": "integer",
+       "minimum": 0,
+       "maximum": 400,
+       "x-unit": "px",
+       "description": "Space on the left and right."
+      },
+      "tag": {
+       "type": "string",
+       "enum": [
+        "bottom",
+        "top",
+        "none"
+       ],
+       "description": "Where the tag band (ticket, team) sits, or none."
+      },
+      "logo": {
+       "type": [
+        "string",
+        "null"
+       ],
+       "x-control": "image-file",
+       "description": "Logo image (SVG, PNG, JPEG, WebP), relative to the profile folder. Null for none."
+      },
+      "logo_position": {
+       "type": "string",
+       "enum": [
+        "top-left",
+        "top-right",
+        "bottom-left",
+        "bottom-right",
+        "above-title"
+       ],
+       "description": "Where the logo sits."
+      },
+      "logo_height": {
+       "type": "integer",
+       "minimum": 16,
+       "maximum": 240,
+       "x-unit": "px",
+       "description": "Logo height."
+      },
+      "background": {
+       "type": [
+        "string",
+        "null"
+       ],
+       "pattern": "^#([0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+       "x-control": "color",
+       "description": "Card background color. Null uses colors.card_background."
+      },
+      "background_image": {
+       "type": [
+        "string",
+        "null"
+       ],
+       "x-control": "image-file",
+       "description": "Background image, cover-fitted, relative to the profile folder. Null for none."
+      }
+     },
+     "description": "Last card. Only the fields that differ from `all`.",
+     "default": {}
+    }
+   }
+  }
+ }
+}

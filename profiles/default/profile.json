@@ -1,0 +1,13 @@
+{
+  "name": "default",
+  "match": [],
+  "work_dir": "tmp/demo",
+  "template": "template.spec.ts",
+  "record": {
+    "base_url": null,
+    "runner": "auto",
+    "app_dir": ".",
+    "device": null,
+    "flutter": "flutter"
+  }
+}

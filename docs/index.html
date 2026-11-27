@@ -1,0 +1,620 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Install the walkie engine and plugin, and make narrated videos of your changes from Claude Code.">
+<title>Walkie Installation</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap">
+<style>
+  /* Layout: docs shell. Sticky top bar, left nav, one reading column, right "On this page". Paper, black ink, hairlines, one orange for marks only. */
+  :root {
+    --bg: #ebebe8;
+    --panel: #f6f6f3;
+    --ink: #111111;
+    --muted: #55554f;
+    --rule: rgba(17,17,17,0.14);
+    --rule-strong: rgba(17,17,17,0.28);
+    --accent: #ff4f00;
+    --accent-tint: rgba(255,79,0,0.10);
+    --code-bg: #f6f6f3;
+    --node: #ffffff;
+    --store: rgba(17,17,17,0.05);
+    --zone: rgba(17,17,17,0.02);
+    --font-sans: 'Geist', system-ui, -apple-system, sans-serif;
+    --font-mono: 'Geist Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #121211; --panel: #1a1a18; --ink: #ededE8; --muted: #a3a39b;
+      --rule: rgba(237,237,232,0.12); --rule-strong: rgba(237,237,232,0.26);
+      --accent: #ff5a14; --accent-tint: rgba(255,90,20,0.14); --code-bg: #1a1a18; --node: #1f1f1d; --store: rgba(237,237,232,0.06); --zone: rgba(237,237,232,0.02);
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #121211; --panel: #1a1a18; --ink: #ededE8; --muted: #a3a39b;
+    --rule: rgba(237,237,232,0.12); --rule-strong: rgba(237,237,232,0.26);
+    --accent: #ff5a14; --accent-tint: rgba(255,90,20,0.14); --code-bg: #1a1a18; --node: #1f1f1d; --store: rgba(237,237,232,0.06); --zone: rgba(237,237,232,0.02);
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  body { margin: 0; }
+  html { scroll-padding-top: 72px; }
+  body { background: var(--bg); color: var(--ink); font-family: var(--font-sans); font-size: 15px; line-height: 1.65; -webkit-font-smoothing: antialiased; }
+  body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+  a { color: inherit; }
+  code { font-family: var(--font-mono); font-size: 0.86em; background: var(--panel); border: 1px solid var(--rule); border-radius: 4px; padding: 0.08em 0.36em; overflow-wrap: anywhere; }
+
+  /* Top bar */
+  .top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); border-bottom: 1px solid var(--rule); }
+  .top-inner { max-width: 1320px; margin: 0 auto; height: 56px; display: flex; align-items: center; gap: 16px;
+    padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; letter-spacing: -0.02em; text-decoration: none; }
+  .mark { width: 18px; height: 18px; border: 1.5px solid var(--ink); border-radius: 3px; position: relative; }
+  .mark::after { content: ""; position: absolute; left: 3px; top: 3px; width: 9px; height: 9px; background: var(--accent); border-radius: 1px; }
+  .chip { font-family: var(--font-mono); font-size: 11px; color: var(--muted); border: 1px solid var(--rule-strong); border-radius: 4px; padding: 1px 6px; }
+  .top nav { margin-left: auto; display: flex; gap: 18px; font-size: 13px; color: var(--muted); }
+  .top nav a { text-decoration: none; }
+  .top nav a:hover { color: var(--ink); }
+
+  /* Shell */
+  .shell { max-width: 1320px; margin: 0 auto; display: grid; grid-template-columns: 232px minmax(0, 1fr) 208px; gap: 48px;
+    padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  .side, .toc { position: sticky; top: calc(56px + env(safe-area-inset-top, 0px)); align-self: start; max-height: calc(100vh - 56px); overflow-y: auto; padding-block: 32px; }
+  .side { border-right: 1px solid var(--rule); padding-right: 16px; }
+  .group { margin-bottom: 24px; }
+  .label { font-family: var(--font-mono); font-size: 10.5px; font-weight: 500; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; }
+  .side ul, .toc ul { list-style: none; margin: 0; padding: 0; }
+  .side li a { display: block; padding: 4px 10px; margin-left: -10px; border-radius: 4px; text-decoration: none; font-size: 14px; color: var(--muted); }
+  .side li a:hover { color: var(--ink); background: var(--panel); }
+  .side li a.on { color: var(--ink); font-weight: 600; background: var(--panel); box-shadow: inset 2px 0 0 var(--accent); }
+  .side li a.ext { display: flex; justify-content: space-between; gap: 8px; }
+  .arrow { font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .soon { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.08em; color: var(--muted); border: 1px dashed var(--rule-strong); border-radius: 3px; padding: 0 4px; margin-left: 6px; }
+
+  .toc li a { display: block; padding: 3px 0; font-size: 13px; color: var(--muted); text-decoration: none; }
+  .toc li a:hover { color: var(--ink); }
+  .toc li.sub a { padding-left: 12px; }
+
+  /* Article */
+  main { min-width: 0; padding-block: 32px 96px; max-width: 760px; }
+  .crumbs { font-size: 13px; color: var(--muted); display: flex; gap: 8px; align-items: center; margin-bottom: 12px; }
+  h1 { font-size: 2.25rem; font-weight: 700; letter-spacing: -0.035em; line-height: 1.12; margin: 0 0 12px; text-wrap: balance; }
+  .lead { font-size: 1.08rem; color: var(--muted); margin: 0 0 28px; max-width: 62ch; }
+  h2 { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.025em; margin: 56px 0 12px; padding-bottom: 8px; border-bottom: 1px solid var(--rule); text-wrap: balance; }
+  h3 { font-size: 1.08rem; font-weight: 600; letter-spacing: -0.01em; margin: 0 0 8px; }
+  p { margin: 0 0 14px; max-width: 68ch; }
+  main ul.list { margin: 0 0 14px; padding-left: 20px; }
+  main ul.list li { margin-bottom: 4px; }
+
+  /* Callout */
+  .note { border: 1px solid var(--rule-strong); border-radius: 6px; background: var(--panel); padding: 14px 16px; margin: 0 0 24px; display: grid; grid-template-columns: 16px minmax(0,1fr); gap: 12px; }
+  .note .dot { width: 10px; height: 10px; margin-top: 7px; border: 1.5px solid var(--ink); border-radius: 2px; }
+  .note.key .dot { background: var(--accent); border-color: var(--accent); }
+  .note p { margin: 0; }
+  .note p + p { margin-top: 6px; }
+  .note b { font-weight: 600; }
+
+  /* Steps */
+  .steps { counter-reset: step; margin: 8px 0 0; padding: 0 0 0 44px; border-left: 1px solid var(--rule-strong); margin-left: 14px; }
+  .step { position: relative; counter-increment: step; padding-bottom: 36px; }
+  .step:last-child { padding-bottom: 4px; }
+  .step::before { content: counter(step); position: absolute; left: -59px; top: -2px; width: 30px; height: 30px; display: grid; place-items: center;
+    font-family: var(--font-mono); font-size: 13px; font-weight: 600; background: var(--bg); border: 1px solid var(--ink); border-radius: 4px; }
+  .step h3 { padding-top: 2px; scroll-margin-top: 72px; }
+
+  /* Code */
+  .code { position: relative; margin: 10px 0 16px; border: 1px solid var(--rule-strong); border-radius: 6px; background: var(--code-bg); }
+  .code .bar { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 8px 6px 14px; border-bottom: 1px solid var(--rule); }
+  .code .where { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+  .code pre { margin: 0; padding: 14px 16px; overflow-x: auto; font-family: var(--font-mono); font-size: 13px; line-height: 1.6; }
+  .code pre .c { color: var(--muted); }
+  .copy { font-family: var(--font-mono); font-size: 11px; color: var(--muted); background: transparent; border: 1px solid var(--rule-strong); border-radius: 4px; padding: 2px 8px; cursor: pointer; }
+  .copy:hover { color: var(--ink); border-color: var(--ink); }
+  .copy:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* Tables */
+  .tbl { overflow-x: auto; margin: 10px 0 20px; border: 1px solid var(--rule-strong); border-radius: 6px; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th { text-align: left; font-family: var(--font-mono); font-size: 10.5px; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); background: var(--panel); }
+  th, td { padding: 9px 14px; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  tr:last-child td { border-bottom: 0; }
+  td.k { white-space: nowrap; font-weight: 600; }
+  .state { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.08em; border-radius: 3px; padding: 1px 6px; white-space: nowrap; }
+  .state.now { border: 1px solid var(--ink); }
+  .state.next { border: 1px dashed var(--rule-strong); color: var(--muted); }
+
+  /* Checkpoints */
+  .flow { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 0; border: 1px solid var(--rule-strong); border-radius: 6px; margin: 10px 0 20px; overflow: hidden; }
+  .flow div { padding: 12px 14px; border-right: 1px solid var(--rule); font-size: 14px; }
+  .flow div:last-child { border-right: 0; }
+  .flow .stop { background: var(--accent-tint); }
+  .flow .label { margin-bottom: 4px; }
+
+  .pager { display: flex; justify-content: space-between; gap: 16px; margin-top: 56px; padding-top: 20px; border-top: 1px solid var(--rule); font-size: 14px; }
+  .pager a { text-decoration: none; border: 1px solid var(--rule-strong); border-radius: 6px; padding: 10px 14px; }
+  .pager a:hover { border-color: var(--ink); }
+  .pager small { display: block; color: var(--muted); font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase; }
+
+
+  /* Concept figure: the SVG's own colors are mapped to the page tokens, so it follows the theme. */
+  .figure { margin: 16px 0 8px; border: 1px solid var(--rule-strong); border-radius: 6px; overflow-x: auto; background: var(--bg); }
+  .figure svg { display: block; width: 100%; min-width: 720px; height: auto; }
+  .figure [fill="#ebebe8"] { fill: var(--bg); }
+  .figure [fill="#111111"]:not(.keep) { fill: var(--ink); }
+  .figure [stroke="#111111"] { stroke: var(--ink); }
+  .figure [fill="#55554f"] { fill: var(--muted); }
+  .figure [stroke="#55554f"] { stroke: var(--muted); }
+  .figure [fill="#ffffff"] { fill: var(--node); }
+  .figure [fill="#ff4f00"] { fill: var(--accent); }
+  .figure [stroke="#ff4f00"] { stroke: var(--accent); }
+  .figure [fill="rgba(17,17,17,0.05)"] { fill: var(--store); }
+  .figure [fill="rgba(17,17,17,0.02)"] { fill: var(--zone); }
+  .figure [stroke="rgba(17,17,17,0.16)"] { stroke: var(--rule-strong); }
+  .figure [fill="rgba(85,85,79,0.10)"] { fill: var(--store); }
+  .figure [fill="rgba(255,79,0,0.10)"] { fill: var(--accent-tint); }
+  .figcap { font-size: 13px; color: var(--muted); margin: 0 0 20px; }
+  .parts { display: grid; grid-template-columns: 168px minmax(0,1fr); border: 1px solid var(--rule-strong); border-radius: 6px; margin: 10px 0 20px; }
+  .parts dt, .parts dd { margin: 0; padding: 10px 14px; border-bottom: 1px solid var(--rule); }
+  .parts dt { font-weight: 600; }
+  .parts dt small { display: block; font-family: var(--font-mono); font-size: 11.5px; font-weight: 400; color: var(--muted); }
+  .parts dt:nth-last-of-type(1), .parts dd:last-of-type { border-bottom: 0; }
+  ol.flowlist { margin: 0 0 16px; padding-left: 22px; }
+  ol.flowlist li { margin-bottom: 6px; padding-left: 4px; }
+  ol.flowlist li::marker { font-family: var(--font-mono); font-size: 13px; color: var(--muted); }
+  @media (max-width: 780px) { .parts { grid-template-columns: minmax(0,1fr); } .parts dt { border-bottom: 0; padding-bottom: 0; } }
+
+  @media (max-width: 1180px) { .shell { grid-template-columns: 220px minmax(0,1fr); } .toc { display: none; } }
+  @media (max-width: 780px) {
+    .shell { grid-template-columns: minmax(0,1fr); gap: 0; }
+    .side { display: none; }
+    .top nav a.hide-sm { display: none; }
+    h1 { font-size: 1.9rem; }
+    .steps { padding-left: 32px; margin-left: 12px; }
+    .step::before { left: -45px; width: 26px; height: 26px; }
+    .flow { grid-template-columns: minmax(0,1fr); }
+    .flow div { border-right: 0; border-bottom: 1px solid var(--rule); }
+    .flow div:last-child { border-bottom: 0; }
+  }
+  @media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-inner">
+    <a class="brand" href="#top"><span class="mark" aria-hidden="true"></span>walkie</a>
+    <span class="chip">0.1.0-alpha</span>
+    <nav>
+      <a class="hide-sm" href="#install">Docs</a>
+      <a class="hide-sm" href="https://github.com/nijicha/walkie-engine/blob/main/CHANGELOG.md">Changelog</a>
+      <a href="https://github.com/nijicha/walkie-engine">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<div class="shell" id="top">
+  <aside class="side" aria-label="Docs">
+    <div class="group">
+      <p class="label">Docs</p>
+      <ul>
+        <li><a class="on" href="#top" aria-current="page">Installation</a></li>
+      </ul>
+    </div>
+    <div class="group">
+      <p class="label">More on GitHub</p>
+      <ul>
+        <li><a class="ext" href="https://github.com/nijicha/walkie-engine#readme" target="_blank" rel="noopener">README<span class="arrow" aria-hidden="true">↗</span><span class="sr">(opens GitHub)</span></a></li>
+        <li><a class="ext" href="https://github.com/nijicha/skills/blob/main/plugins/walkie/skills/walkie/references/profiles.md" target="_blank" rel="noopener">Profiles<span class="arrow" aria-hidden="true">↗</span><span class="sr">(opens GitHub)</span></a></li>
+        <li><a class="ext" href="https://github.com/nijicha/skills/blob/main/plugins/walkie/skills/walkie/references/flutter.md" target="_blank" rel="noopener">Flutter apps<span class="arrow" aria-hidden="true">↗</span><span class="sr">(opens GitHub)</span></a></li>
+        <li><a class="ext" href="https://github.com/nijicha/skills/blob/main/plugins/walkie/skills/walkie/references/pronunciation.md" target="_blank" rel="noopener">Writing Thai narration<span class="arrow" aria-hidden="true">↗</span><span class="sr">(opens GitHub)</span></a></li>
+        <li><a class="ext" href="https://github.com/nijicha/skills/blob/main/plugins/walkie/skills/walkie/references/kit.md" target="_blank" rel="noopener">Recording kit<span class="arrow" aria-hidden="true">↗</span><span class="sr">(opens GitHub)</span></a></li>
+        <li><a class="ext" href="https://github.com/nijicha/skills/blob/main/plugins/walkie/skills/walkie/references/layers.md" target="_blank" rel="noopener">Layers and library<span class="arrow" aria-hidden="true">↗</span><span class="sr">(opens GitHub)</span></a></li>
+        <li><a class="ext" href="https://github.com/nijicha/skills/blob/main/plugins/walkie/skills/walkie/references/without-mcp.md" target="_blank" rel="noopener">Without MCP<span class="arrow" aria-hidden="true">↗</span><span class="sr">(opens GitHub)</span></a></li>
+      </ul>
+    </div>
+  </aside>
+
+  <main>
+    <div class="crumbs"><span>Docs</span><span aria-hidden="true">/</span><span>Installation</span></div>
+    <h1>Installation</h1>
+    <p class="lead">Install the walkie engine and the walkie plugin, then ask Claude Code for a narrated video of your change. You don't need the Mac app.</p>
+
+    <div class="note key">
+      <span class="dot" aria-hidden="true"></span>
+      <div>
+        <p><b>Two installs.</b> The engine is a command line tool from Homebrew (<code>nijicha/walkie-engine</code>). The skill, the subagent and the MCP server are a Claude Code plugin from the <code>nijicha/skills</code> marketplace. They update separately.</p>
+      </div>
+    </div>
+
+    <h2 id="concept">How it works</h2>
+    <p>Walkie has two halves. The <b>skill</b> is text that tells Claude what to do. The <b>engine</b> is code on your Mac that does it. Claude sits in between: it reads the skill, then uses the engine's tools.</p>
+    <div class="figure">
+      <svg viewBox="0 92 1040 436" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="concept-title concept-desc">
+        <title id="concept-title">How the skill and the engine fit together</title>
+        <desc id="concept-desc">Claude Code loads the walkie skill and briefs a Sonnet subagent, which calls the engine's MCP server; the server runs the TypeScript recorder and the Rust wt tool, which turn your app, a team profile and Thai narration into an MP4 in the video library.</desc>
+        <defs>
+          <marker id="c-arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#55554f"/></marker>
+          <marker id="c-arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#ff4f00"/></marker>
+        </defs>
+
+        <rect y="92" width="1040" height="436" fill="#ebebe8"/>
+
+        <!-- Zones -->
+        <rect x="236" y="112" width="224" height="356" rx="8" fill="rgba(17,17,17,0.02)" stroke="rgba(17,17,17,0.16)" stroke-width="0.8"/>
+        <rect x="256" y="116" width="184" height="12" rx="2" fill="#ebebe8"/>
+        <text x="348" y="125" fill="#55554f" font-size="7" font-family="'Geist Mono', monospace" font-weight="500" text-anchor="middle" letter-spacing="0.14em">SKILL · TELLS CLAUDE WHAT TO DO</text>
+
+        <rect x="492" y="112" width="524" height="356" rx="8" fill="rgba(17,17,17,0.02)" stroke="rgba(17,17,17,0.16)" stroke-width="0.8"/>
+        <rect x="654" y="116" width="200" height="12" rx="2" fill="#ebebe8"/>
+        <text x="754" y="125" fill="#55554f" font-size="7" font-family="'Geist Mono', monospace" font-weight="500" text-anchor="middle" letter-spacing="0.14em">ENGINE · DOES THE WORK ON YOUR MAC</text>
+
+        <!-- Arrows (before nodes) -->
+        <g font-family="'Geist Mono', monospace" font-size="8" letter-spacing="0.06em" fill="#111111" text-anchor="middle">
+          <!-- LOADS: you -> skill -->
+          <path d="M152,256 H176 Q184,256 184,248 V192 Q184,184 192,184 H260" fill="none" stroke="#55554f" stroke-width="1.2" marker-end="url(#c-arrow)"/>
+          <rect x="192" y="210" width="36" height="12" rx="2" fill="#ebebe8"/>
+          <text x="210" y="219">LOADS</text>
+
+          <!-- BRIEF: you -> subagent -->
+          <path d="M152,280 H176 Q184,280 184,288 V344 Q184,352 192,352 H260" fill="none" stroke="#55554f" stroke-width="1.2" marker-end="url(#c-arrow)"/>
+          <rect x="192" y="310" width="36" height="12" rx="2" fill="#ebebe8"/>
+          <text x="210" y="319">BRIEF</text>
+
+          <!-- FOLLOWS: subagent -> skill -->
+          <line x1="348" y1="320" x2="348" y2="216" stroke="#55554f" stroke-width="1.2" marker-end="url(#c-arrow)"/>
+          <rect x="356" y="262" width="48" height="12" rx="2" fill="#ebebe8"/>
+          <text x="380" y="271">FOLLOWS</text>
+
+          <!-- TOOL CALLS: subagent -> MCP (headline) -->
+          <line x1="436" y1="352" x2="516" y2="352" stroke="#ff4f00" stroke-width="1.6" marker-end="url(#c-arrow-accent)"/>
+          <rect x="444" y="334" width="64" height="12" rx="2" fill="#ebebe8"/>
+          <text x="476" y="343">TOOL CALLS</text>
+
+          <!-- THEME: profile -> recorder -->
+          <line x1="668" y1="184" x2="724" y2="184" stroke="#55554f" stroke-width="1.2" marker-end="url(#c-arrow)"/>
+          <rect x="678" y="166" width="36" height="12" rx="2" fill="#ebebe8"/>
+          <text x="696" y="175">THEME</text>
+
+          <!-- RECORD: MCP -> recorder -->
+          <path d="M640,304 V248 Q640,240 648,240 H736 Q744,240 744,232 V216" fill="none" stroke="#55554f" stroke-width="1.2" marker-end="url(#c-arrow)"/>
+          <rect x="672" y="222" width="40" height="12" rx="2" fill="#ebebe8"/>
+          <text x="692" y="231">RECORD</text>
+
+          <!-- VOICE: MCP -> wt -->
+          <line x1="668" y1="320" x2="724" y2="320" stroke="#55554f" stroke-width="1.2" marker-end="url(#c-arrow)"/>
+          <rect x="678" y="302" width="36" height="12" rx="2" fill="#ebebe8"/>
+          <text x="696" y="311">VOICE</text>
+
+          <!-- VIDEO + EVENTS: recorder -> wt -->
+          <line x1="860" y1="216" x2="860" y2="268" stroke="#55554f" stroke-width="1.2" marker-end="url(#c-arrow)"/>
+          <rect x="868" y="236" width="80" height="12" rx="2" fill="#ebebe8"/>
+          <text x="908" y="245">VIDEO + EVENTS</text>
+
+          <!-- MP4 + LAYERS: wt -> library -->
+          <line x1="860" y1="332" x2="860" y2="384" stroke="#55554f" stroke-width="1.2" marker-end="url(#c-arrow)"/>
+          <rect x="868" y="352" width="76" height="12" rx="2" fill="#ebebe8"/>
+          <text x="906" y="361">MP4 + LAYERS</text>
+        </g>
+
+        <!-- Nodes -->
+        <g font-family="'Geist', system-ui, sans-serif">
+          <!-- You -->
+          <rect x="24" y="232" width="128" height="72" rx="6" fill="#ebebe8"/>
+          <rect x="24" y="232" width="128" height="72" rx="6" fill="rgba(85,85,79,0.10)" stroke="#55554f" stroke-width="1"/>
+          <rect x="36" y="244" width="28" height="12" rx="2" fill="none" stroke="#55554f" stroke-width="0.8"/>
+          <text x="50" y="253" font-family="'Geist Mono', monospace" font-size="7" font-weight="500" letter-spacing="0.14em" fill="#55554f" text-anchor="middle">YOU</text>
+          <text x="36" y="278" font-size="12" font-weight="600" fill="#111111">Claude Code</text>
+          <text x="36" y="292" font-family="'Geist Mono', monospace" font-size="9" fill="#55554f">your session</text>
+
+          <!-- Skill -->
+          <rect x="260" y="152" width="176" height="64" rx="6" fill="#ebebe8"/>
+          <rect x="260" y="152" width="176" height="64" rx="6" fill="rgba(17,17,17,0.05)" stroke="#55554f" stroke-width="1"/>
+          <rect x="272" y="164" width="76" height="12" rx="2" fill="none" stroke="#55554f" stroke-width="0.8"/>
+          <text x="310" y="173" font-family="'Geist Mono', monospace" font-size="7" font-weight="500" letter-spacing="0.14em" fill="#55554f" text-anchor="middle">INSTRUCTIONS</text>
+          <text x="272" y="194" font-size="12" font-weight="600" fill="#111111">walkie skill</text>
+          <text x="272" y="207" font-family="'Geist Mono', monospace" font-size="9" fill="#55554f">SKILL.md · references/</text>
+
+          <!-- Subagent -->
+          <rect x="260" y="320" width="176" height="64" rx="6" fill="#ebebe8"/>
+          <rect x="260" y="320" width="176" height="64" rx="6" fill="#ffffff" stroke="#111111" stroke-width="1"/>
+          <rect x="272" y="332" width="88" height="12" rx="2" fill="none" stroke="#111111" stroke-width="0.8"/>
+          <text x="316" y="341" font-family="'Geist Mono', monospace" font-size="7" font-weight="500" letter-spacing="0.14em" fill="#111111" text-anchor="middle">AGENT · SONNET</text>
+          <text x="272" y="362" font-size="12" font-weight="600" fill="#111111">walkie subagent</text>
+          <text x="272" y="375" font-family="'Geist Mono', monospace" font-size="9" fill="#55554f">agents/walkie.md</text>
+
+          <!-- Profile -->
+          <rect x="516" y="152" width="152" height="64" rx="6" fill="#ebebe8"/>
+          <rect x="516" y="152" width="152" height="64" rx="6" fill="rgba(17,17,17,0.05)" stroke="#55554f" stroke-width="1"/>
+          <rect x="528" y="164" width="36" height="12" rx="2" fill="none" stroke="#55554f" stroke-width="0.8"/>
+          <text x="546" y="173" font-family="'Geist Mono', monospace" font-size="7" font-weight="500" letter-spacing="0.14em" fill="#55554f" text-anchor="middle">FILES</text>
+          <text x="528" y="194" font-size="12" font-weight="600" fill="#111111">Team profile</text>
+          <text x="528" y="207" font-family="'Geist Mono', monospace" font-size="9" fill="#55554f">theme.json · NOTES.md</text>
+
+          <!-- MCP server (focal) -->
+          <rect x="516" y="304" width="152" height="72" rx="6" fill="#ebebe8"/>
+          <rect x="516" y="304" width="152" height="72" rx="6" fill="rgba(255,79,0,0.10)" stroke="#ff4f00" stroke-width="1.6"/>
+          <rect x="528" y="316" width="44" height="12" rx="2" fill="#ff4f00"/>
+          <text x="550" y="325" font-family="'Geist Mono', monospace" font-size="7" font-weight="500" letter-spacing="0.14em" fill="#111111" class="keep" text-anchor="middle">BRIDGE</text>
+          <text x="528" y="350" font-size="12" font-weight="600" fill="#111111">MCP server</text>
+          <text x="528" y="364" font-family="'Geist Mono', monospace" font-size="9" fill="#55554f">server.ts · 13 tools</text>
+
+          <!-- Recorder -->
+          <rect x="724" y="152" width="272" height="64" rx="6" fill="#ebebe8"/>
+          <rect x="724" y="152" width="272" height="64" rx="6" fill="#ffffff" stroke="#111111" stroke-width="1"/>
+          <rect x="736" y="164" width="64" height="12" rx="2" fill="none" stroke="#111111" stroke-width="0.8"/>
+          <text x="768" y="173" font-family="'Geist Mono', monospace" font-size="7" font-weight="500" letter-spacing="0.14em" fill="#111111" text-anchor="middle">TYPESCRIPT</text>
+          <text x="736" y="194" font-size="12" font-weight="600" fill="#111111">Recorder + overlay</text>
+          <text x="736" y="207" font-family="'Geist Mono', monospace" font-size="9" fill="#55554f">scripts/ · Playwright drives your app</text>
+
+          <!-- wt -->
+          <rect x="724" y="268" width="272" height="64" rx="6" fill="#ebebe8"/>
+          <rect x="724" y="268" width="272" height="64" rx="6" fill="#ffffff" stroke="#111111" stroke-width="1"/>
+          <rect x="736" y="280" width="32" height="12" rx="2" fill="none" stroke="#111111" stroke-width="0.8"/>
+          <text x="752" y="289" font-family="'Geist Mono', monospace" font-size="7" font-weight="500" letter-spacing="0.14em" fill="#111111" text-anchor="middle">RUST</text>
+          <text x="736" y="310" font-size="12" font-weight="600" fill="#111111">wt</text>
+          <text x="736" y="323" font-family="'Geist Mono', monospace" font-size="9" fill="#55554f">bin/wt · Thai TTS · mix · frames</text>
+
+          <!-- Library -->
+          <rect x="724" y="384" width="272" height="64" rx="6" fill="#ebebe8"/>
+          <rect x="724" y="384" width="272" height="64" rx="6" fill="rgba(17,17,17,0.05)" stroke="#55554f" stroke-width="1"/>
+          <rect x="736" y="396" width="44" height="12" rx="2" fill="none" stroke="#55554f" stroke-width="0.8"/>
+          <text x="758" y="405" font-family="'Geist Mono', monospace" font-size="7" font-weight="500" letter-spacing="0.14em" fill="#55554f" text-anchor="middle">OUTPUT</text>
+          <text x="736" y="426" font-size="12" font-weight="600" fill="#111111">Video library</text>
+          <text x="736" y="439" font-family="'Geist Mono', monospace" font-size="9" fill="#55554f">walkie.mp4 + layers</text>
+        </g>
+
+        <!-- Legend -->
+        <line x1="24" y1="484" x2="1016" y2="484" stroke="rgba(17,17,17,0.16)" stroke-width="0.8"/>
+        <g font-family="'Geist Mono', monospace" font-size="8" letter-spacing="0.06em" fill="#55554f">
+          <rect x="24" y="500" width="16" height="12" rx="2" fill="rgba(255,79,0,0.10)" stroke="#ff4f00" stroke-width="1.2"/>
+          <text x="48" y="509">WHERE SKILL MEETS ENGINE</text>
+          <rect x="200" y="500" width="16" height="12" rx="2" fill="#ffffff" stroke="#111111" stroke-width="1"/>
+          <text x="224" y="509">RUNS</text>
+          <rect x="272" y="500" width="16" height="12" rx="2" fill="rgba(17,17,17,0.05)" stroke="#55554f" stroke-width="1"/>
+          <text x="296" y="509">FILES ON DISK</text>
+          <line x1="392" y1="506" x2="420" y2="506" stroke="#ff4f00" stroke-width="1.6" marker-end="url(#c-arrow-accent)"/>
+          <text x="428" y="509">THE ONLY WAY IN</text>
+        </g>
+      </svg>
+    </div>
+    <p class="figcap">The skill can't run anything by itself. Every action reaches the engine through the MCP server.</p>
+
+    <h3 id="parts">The parts</h3>
+    <dl class="parts">
+      <dt>Skill<small>SKILL.md · references/</small></dt>
+      <dd>Instructions Claude reads: the steps, the two checkpoints, how to write Thai narration, and which layer to change for each kind of request.</dd>
+      <dt>Subagent<small>agents/walkie.md</small></dt>
+      <dd>Claude on Sonnet in a fresh context. Your main session hands it a short brief, so a long conversation doesn't pay for the video.</dd>
+      <dt>MCP server<small>engine/mcp/server.ts</small></dt>
+      <dd>The only way into the engine. Its 13 tools include <code>start</code>, <code>storyboard</code>, <code>record</code>, <code>revoice</code> and <code>rerender</code>.</dd>
+      <dt>Recorder + overlay<small>TypeScript</small></dt>
+      <dd>Playwright drives your app and records the screen. The overlay (captions, highlight box, cursor, cards) is drawn afterwards in Chromium from a log of events.</dd>
+      <dt>wt<small>Rust · engine/bin/wt</small></dt>
+      <dd>Speaks the Thai narration, lays the overlay and the voice over the recording to make the MP4, and makes the contact sheet.</dd>
+      <dt>Profile<small>theme.json · voice.json · NOTES.md</small></dt>
+      <dd>Your team's look and voice, and how to start your app.</dd>
+      <dt>Library<small>Application Support/…/videos</small></dt>
+      <dd>Each finished video with its layers, ready to revoice or rerender.</dd>
+    </dl>
+
+    <h3 id="one-video">One video, start to finish</h3>
+    <ol class="flowlist">
+      <li>You ask for a walkie of a change. Claude passes a brief to the subagent.</li>
+      <li>The subagent writes a storyboard: one scene per step, with a caption and a line of narration. The engine voices each line and flags any that are too fast or choppy.</li>
+      <li><b>Checkpoint 1.</b> You approve the storyboard.</li>
+      <li>The subagent writes a Playwright spec for the scenes, with a check in every scene, so a broken feature fails the recording instead of making a wrong video.</li>
+      <li>The engine records your app. While it records, it draws nothing on the page; it only logs when each caption, highlight and cursor move happens.</li>
+      <li>The overlay is drawn from that log, frame by frame, in the profile's look. <code>wt</code> combines the page, the overlay and the voice into <code>walkie.mp4</code>.</li>
+      <li><code>wt</code> makes a contact sheet: two frames per narration line, plus a check for flashes.</li>
+      <li><b>Checkpoint 2.</b> You approve the contact sheet and the MP4.</li>
+    </ol>
+
+    <h3 id="layers">Why changes don't need a new recording</h3>
+    <p>A video is kept as separate layers, so each kind of change rebuilds only its own layer.</p>
+    <div class="tbl">
+      <table>
+        <thead><tr><th>Layer</th><th>Changes when you</th><th>Rebuilt by</th></tr></thead>
+        <tbody>
+          <tr><td class="k">Voice</td><td>Reword a narration line</td><td><code>revoice</code></td></tr>
+          <tr><td class="k">Text</td><td>Reword a caption or card</td><td><code>texts</code>, <code>rerender</code></td></tr>
+          <tr><td class="k">Overlay</td><td>Change colors, fonts, sizes or the logo</td><td><code>rerender</code></td></tr>
+          <tr><td class="k">Page</td><td>Change steps, order, pauses, zoom or video size</td><td>a new recording</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2 id="requirements">Requirements</h2>
+    <p>Homebrew brings everything else the engine needs: Node, ffmpeg and the engine's own tools, already built.</p>
+    <div class="tbl">
+      <table>
+        <thead><tr><th>You need</th><th>Why</th><th>Get it</th></tr></thead>
+        <tbody>
+          <tr><td class="k">macOS</td><td>The engine records on your Mac; Flutter apps record on the iOS Simulator</td><td>—</td></tr>
+          <tr><td class="k">Homebrew</td><td>Installs and updates the engine</td><td><a href="https://brew.sh">brew.sh</a></td></tr>
+          <tr><td class="k">Claude Code</td><td>Runs the skill, the subagent and the MCP server</td><td><a href="https://claude.com/claude-code">claude.com/claude-code</a></td></tr>
+          <tr><td class="k">Flutter</td><td>Optional. Only for Flutter apps, plus Xcode or Android Studio</td><td><a href="https://docs.flutter.dev/get-started">docs.flutter.dev</a></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2 id="install">Install</h2>
+    <ol class="steps" style="list-style:none">
+      <li class="step">
+        <h3 id="step-engine">Install the engine</h3>
+        <p>Install <code>walkie</code> with Homebrew, then run setup once. Setup downloads the engine's own Chromium and the Thai voice model to <code>~/.cache/walkie</code>.</p>
+        <div class="code">
+          <div class="bar"><span class="where">Terminal</span><button class="copy" type="button">Copy</button></div>
+          <pre><code>brew install nijicha/tap/walkie
+walkie setup</code></pre>
+        </div>
+      </li>
+
+      <li class="step">
+        <h3 id="step-plugin">Install the plugin</h3>
+        <p>In Claude Code, install the <code>walkie</code> plugin. It brings the skill, the <code>walkie</code> subagent and the MCP server, which runs the engine you just installed.</p>
+        <div class="code">
+          <div class="bar"><span class="where">Claude Code</span><button class="copy" type="button">Copy</button></div>
+          <pre><code>/plugin install walkie --marketplace nijicha/skills</code></pre>
+        </div>
+        <p>On Claude Code older than 2.1.275, add the marketplace first: <code>/plugin marketplace add nijicha/skills</code>, then <code>/plugin install walkie@nijicha-skills</code>.</p>
+      </li>
+
+      <li class="step">
+        <h3 id="step-check">Check that it works</h3>
+        <p>Restart Claude Code. Open <code>/mcp</code>: <code>plugin:walkie:walkie</code> should be connected. Then record the smoke test. It records a static page, so you don't need an app.</p>
+        <div class="code">
+          <div class="bar"><span class="where">Terminal</span><button class="copy" type="button">Copy</button></div>
+          <pre><code>walkie smoke</code></pre>
+        </div>
+      </li>
+
+      <li class="step">
+        <h3 id="step-profile">Choose a profile</h3>
+        <p>A profile holds your team's look and voice: colors, fonts, cards, voice settings, a lexicon, and notes on how to start your app. The built-in <code>default</code> works without any setup. For a team look, clone the team's profile repo:</p>
+        <div class="code">
+          <div class="bar"><span class="where">Terminal</span><button class="copy" type="button">Copy</button></div>
+          <pre><code>git clone &lt;profile repo&gt; ~/.config/walkie/profiles/&lt;name&gt;</code></pre>
+        </div>
+        <p>No team profile yet? Ask Claude <i>“Make a walkie profile for this repo.”</i> It asks one question at a time and writes only what differs from <code>default</code>. To see every state of a profile on a sample page:</p>
+        <div class="code">
+          <div class="bar"><span class="where">Terminal</span><button class="copy" type="button">Copy</button></div>
+          <pre><code>walkie preview &lt;name&gt; preview.html &amp;&amp; open preview.html</code></pre>
+        </div>
+      </li>
+
+      <li class="step">
+        <h3 id="first">Make your first walkie</h3>
+        <p>Open Claude Code in your app's repo and ask in plain words. Name the PR or ticket, what changed, and how to start the app.</p>
+        <div class="code">
+          <div class="bar"><span class="where">Claude Code</span><button class="copy" type="button">Copy</button></div>
+          <pre><code>Make a walkie of PR #482: guests can now edit the name on their ticket.
+The app starts with bin/dev at http://localhost:3000.</code></pre>
+        </div>
+        <p>Claude hands the job to the <code>walkie</code> subagent, which runs on Sonnet in a fresh context. It stops twice for your answer:</p>
+        <div class="flow">
+          <div><p class="label">Write</p>Storyboard: one scene per step, Thai narration checked for pace</div>
+          <div class="stop"><p class="label">You approve</p>The storyboard table, then the contact sheet and MP4</div>
+          <div><p class="label">Hand over</p>MP4 path, length, scenes, and any bug it found</div>
+        </div>
+        <p>Finished videos go to <code>~/Library/Application Support/walkie/videos/&lt;repo&gt;--&lt;name&gt;/</code>. Set <code>WALKIE_HOME</code> to keep them somewhere else.</p>
+      </li>
+    </ol>
+
+    <h2 id="no-app">Everything without the Mac app</h2>
+    <p>The Mac app is a window onto the same library. Everything it does, you can ask Claude to do instead.</p>
+    <div class="tbl">
+      <table>
+        <thead><tr><th>In the Mac app</th><th>Ask Claude</th><th>MCP tool</th></tr></thead>
+        <tbody>
+          <tr><td>Browse the library</td><td><i>“List my walkies”</i></td><td><code>list</code></td></tr>
+          <tr><td>Edit a caption or card</td><td><i>“Change caption 2 to …”</i></td><td><code>texts</code>, <code>rerender</code></td></tr>
+          <tr><td>Edit a narration line</td><td><i>“Say clip 3 more slowly”</i></td><td><code>revoice</code></td></tr>
+          <tr><td>Look &amp; voice editor</td><td>Edit the profile, then <i>“rerender it”</i></td><td><code>rerender</code></td></tr>
+          <tr><td>Copy PR text</td><td><i>“Give me the PR text”</i></td><td><code>pr_text</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>None of these record again. A change of steps, order, page or timing does: ask for a new recording.</p>
+
+    <h2 id="voices">Voices and languages</h2>
+    <p>The voice is set in the profile's <code>voice.json</code>. <code>engine</code> picks the speech engine and <code>language</code> the language. Today there is one engine, MakHam, and it speaks Thai.</p>
+    <div class="code">
+      <div class="bar"><span class="where">profiles/&lt;name&gt;/voice.json</span><button class="copy" type="button">Copy</button></div>
+      <pre><code>{
+  "engine": "makham",
+  "language": "th",
+  "model": "makham_female",
+  "speed": 1.2
+}</code></pre>
+    </div>
+    <div class="tbl">
+      <table>
+        <thead><tr><th>Engine</th><th>Languages</th><th>Models</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td class="k">makham</td><td>Thai</td><td><code>makham_female</code> (natural), <code>paradee</code> (15× faster, for drafts)</td><td><span class="state now">AVAILABLE</span></td></tr>
+          <tr><td class="k">More engines</td><td>English and other languages</td><td>—</td><td><span class="state next">PLANNED</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>A new engine will plug in behind the same two fields, so a profile switches language by changing <code>engine</code> and <code>language</code>. Recordings, captions and the look stay the same.</p>
+
+    <h2 id="update">Update</h2>
+    <p>The engine and the plugin update separately.</p>
+        <div class="code">
+          <div class="bar"><span class="where">Terminal</span><button class="copy" type="button">Copy</button></div>
+          <pre><code>brew upgrade walkie</code></pre>
+        </div>
+        <div class="code">
+          <div class="bar"><span class="where">Claude Code</span><button class="copy" type="button">Copy</button></div>
+          <pre><code>/plugin marketplace update nijicha-skills</code></pre>
+        </div>
+    <p>Chromium and the voice model stay cached in <code>~/.cache</code>, so an upgrade doesn't download them again.</p>
+
+    <h2 id="troubleshooting">Troubleshooting</h2>
+    <div class="tbl">
+      <table>
+        <thead><tr><th>You see</th><th>Do this</th></tr></thead>
+        <tbody>
+          <tr><td><code>plugin:walkie:walkie</code> fails to connect</td><td>The engine isn't installed or isn't on your <code>PATH</code>. Run <code>walkie version</code> in a terminal; if it fails, do step 1.</td></tr>
+          <tr><td><code>engine packages missing: run … setup</code></td><td>Run <code>walkie setup</code>.</td></tr>
+          <tr><td>The voice model downloads every time</td><td>Something clears <code>~/.cache/walkie</code>. Set <code>WALKIE_TTS_DATA</code> to a folder that stays.</td></tr>
+          <tr><td>The recording stutters</td><td>Recording is real time. Heavy steps wait in one queue for the whole machine; close other heavy work while it records.</td></tr>
+          <tr><td>Something else</td><td>Open an issue on <a href="https://github.com/nijicha/walkie-engine/issues">nijicha/walkie-engine</a> with the output of <code>walkie version</code> and the error.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="pager">
+      <span></span>
+      <a href="https://github.com/nijicha/skills/blob/main/plugins/walkie/skills/walkie/references/profiles.md"><small>Next</small>Profiles</a>
+    </div>
+  </main>
+
+  <aside class="toc" aria-label="On this page">
+    <p class="label">On this page</p>
+    <ul>
+      <li><a href="#concept">How it works</a></li>
+      <li class="sub"><a href="#parts">The parts</a></li>
+      <li class="sub"><a href="#one-video">One video</a></li>
+      <li class="sub"><a href="#layers">Layers</a></li>
+      <li><a href="#requirements">Requirements</a></li>
+      <li><a href="#install">Install</a></li>
+      <li class="sub"><a href="#step-engine">Install the engine</a></li>
+      <li class="sub"><a href="#step-plugin">Install the plugin</a></li>
+      <li class="sub"><a href="#step-check">Check that it works</a></li>
+      <li class="sub"><a href="#step-profile">Choose a profile</a></li>
+      <li class="sub"><a href="#first">First walkie</a></li>
+      <li><a href="#no-app">Without the Mac app</a></li>
+      <li><a href="#voices">Voices and languages</a></li>
+      <li><a href="#update">Update</a></li>
+      <li><a href="#troubleshooting">Troubleshooting</a></li>
+    </ul>
+  </aside>
+</div>
+
+<script>
+  document.querySelectorAll('.code').forEach(function (box) {
+    var btn = box.querySelector('.copy');
+    var pre = box.querySelector('pre');
+    btn.addEventListener('click', function () {
+      var text = pre.innerText;
+      var done = function () { btn.textContent = 'Copied'; setTimeout(function () { btn.textContent = 'Copy'; }, 1400); };
+      var fallback = function () {
+        var r = document.createRange(); r.selectNodeContents(pre);
+        var s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+        btn.textContent = 'Selected';
+        setTimeout(function () { btn.textContent = 'Copy'; }, 1400);
+      };
+      try {
+        navigator.clipboard.writeText(text).then(done, fallback);
+      } catch (e) { fallback(); }
+    });
+  });
+</script>
+
+</body>
+</html>

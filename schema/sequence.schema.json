@@ -1,0 +1,52 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "$id": "https://github.com/nijicha/walkie-engine/schema/sequence.schema.json",
+ "title": "Sequence",
+ "description": "Which cards a walkie uses. A profile file lists only what it changes: every field is optional and falls back to profiles/default.",
+ "type": "object",
+ "additionalProperties": false,
+ "properties": {
+  "$schema": {
+   "type": "string"
+  },
+  "intro": {
+   "type": "boolean",
+   "default": true,
+   "description": "Opening card: ticket, title, one line."
+  },
+  "chapter": {
+   "type": "boolean",
+   "default": false,
+   "description": "Short cards between parts (before / after)."
+  },
+  "summary": {
+   "type": "boolean",
+   "default": true,
+   "description": "Closing card with a checklist."
+  },
+  "outro": {
+   "type": "boolean",
+   "default": false,
+   "description": "Last card, the same in every video (outro_html)."
+  },
+  "step_numbers": {
+   "type": "boolean",
+   "default": true,
+   "description": "Number the step captions."
+  },
+  "chapter_ms": {
+   "type": "integer",
+   "description": "How long a chapter card without narration stays.",
+   "default": 2000,
+   "minimum": 500,
+   "maximum": 10000,
+   "x-unit": "ms"
+  },
+  "outro_html": {
+   "type": "string",
+   "default": "",
+   "description": "The outro card's HTML (.tag, h1, p).",
+   "x-control": "html"
+  }
+ }
+}
