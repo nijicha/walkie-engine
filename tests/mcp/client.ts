@@ -53,6 +53,14 @@ const en = await call("voice_preview", { text: "Open Eventpop, then press Save a
 if (en.includes("UNKNOWN") || !en.includes("ˈɛvəntpˌɑp")) { console.error("FAIL: English preview did not use the lexicon"); process.exit(1) }
 const unknown = await call("voice_preview", { text: "Built with Kokoro.", profile: "en-check" })
 if (!unknown.includes("UNKNOWN Kokoro")) { console.error("FAIL: English preview did not flag an unknown word"); process.exit(1) }
+// A lexicon entry added after start counts in the next storyboard run (the walkie's profile.json is
+// resolved at start).
+const enStart = await call("start", { repo, name: "mcp-smoke-en", profile: "en-check", min_engine: "0.2.0-alpha" })
+if (!enStart.includes("Voice: English")) { console.error("FAIL: start does not say English"); process.exit(1) }
+const enScenes = [{ clip: "n0", narration: "Built with Kokoro." }]
+if (!(await call("storyboard", { repo, name: "mcp-smoke-en", scenes: enScenes })).includes("UNKNOWN Kokoro")) { console.error("FAIL: no UNKNOWN before the lexicon entry"); process.exit(1) }
+await call("lexicon", { profile: "en-check", set: { Kokoro: "kəkˈɔɹO" } })
+if ((await call("storyboard", { repo, name: "mcp-smoke-en", scenes: enScenes })).includes("UNKNOWN")) { console.error("FAIL: storyboard ignored a lexicon entry added after start"); process.exit(1) }
 await call("record", { repo, name: "mcp-smoke", title: "MCP smoke test" })
 // One line that fits its gap, one far too long for it (must be refused).
 await call("revoice", { id: `${repo.split("/").pop()}--mcp-smoke`, clips: [

@@ -133,7 +133,7 @@ export class Demo {
     await this.hideCard()
   }
 
-  // Short card between parts ("ก่อนแก้" / "หลังแก้"). Off unless sequence.json turns it on.
+  // Short card between parts ("Before" / "After", or ก่อนแก้ / หลังแก้). Off unless sequence.json turns it on.
   async chapter(html: string, clip?: string) {
     if (!this.seq.chapter) return
     await this.clearStage()

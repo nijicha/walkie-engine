@@ -6,12 +6,13 @@ import { Demo, expect, test } from "./kit"
 test("demo", async ({ page }) => {
   const demo = await Demo.create(page)
 
+  // Cards and captions: in the narration's language (walkie:start's Voice line), UI words as the UI spells them.
   await test.step("Intro", async () => {
     await page.goto("/")
     await demo.intro(
-      `<div class="tag"><span>TICKET</span><span>PR #NNNN</span><span>สำหรับทีม …</span></div>
-       <h1>หัวข้อของการเปลี่ยนแปลง</h1>
-       <p>บรรทัดอธิบายสั้นๆ</p>`,
+      `<div class="tag"><span>TICKET</span><span>PR #NNNN</span><span>FOR …</span></div>
+       <h1>What changed</h1>
+       <p>One short line</p>`,
       "n0",
     )
   })
@@ -20,7 +21,7 @@ test("demo", async ({ page }) => {
     const target = page.getByRole("button", { name: "Save" })
     await demo.scrollTo(target)
     await demo.highlight(target) // { spotlight: true } on text-heavy pages, { zoom: true } on busy ones
-    await demo.stepCaption("กด <b>“Save”</b>") // UI words in <b>, spelled as the UI shows them
+    await demo.stepCaption("Press <b>Save</b>") // UI words in <b>, spelled as the UI shows them
     await demo.say("n1")
     await demo.pause(1200)
     await demo.click(target)
@@ -30,10 +31,10 @@ test("demo", async ({ page }) => {
 
   await test.step("Summary", async () => {
     await demo.summary(
-      `<div class="tag"><span>สรุป</span><span>PR #NNNN</span></div>
+      `<div class="tag"><span>SUMMARY</span><span>PR #NNNN</span></div>
        <ul>
-         <li>สิ่งที่เปลี่ยน</li>
-         <li class="warn">ข้อควรระวัง</li>
+         <li>What changed</li>
+         <li class="warn">What to watch out for</li>
        </ul>`,
       "n9",
     )

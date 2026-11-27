@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Installation help
+    url: https://nijicha.github.io/walkie-engine/
+    about: Install steps and troubleshooting. Run walkie doctor first; it names the fix for most setup problems.
+  - name: Security problem
+    url: https://github.com/nijicha/walkie-engine/security/advisories/new
+    about: Report a vulnerability privately, not in a public issue.
