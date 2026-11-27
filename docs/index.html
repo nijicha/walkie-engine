@@ -109,6 +109,11 @@
   /* Code */
   .clip { margin: 12px 0 20px; }
   .clip video { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; border-radius: 8px; border: 1px solid var(--rule-strong); background: #1f1f1f; }
+  .clip img { display: block; width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--rule-strong); }
+  .clip.sheet img { max-width: 560px; }
+  .gallery { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 4px 16px; margin: 12px 0 8px; }
+  .gallery .clip { margin: 0 0 12px; }
+  @media (max-width: 600px) { .gallery { grid-template-columns: minmax(0,1fr); } }
   .clip figcaption { margin-top: 6px; font-size: 13px; color: var(--muted); }
   .code { position: relative; margin: 10px 0 16px; border: 1px solid var(--rule-strong); border-radius: 6px; background: var(--code-bg); }
   .code .bar { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 8px 6px 14px; border-bottom: 1px solid var(--rule); }
@@ -205,6 +210,7 @@
       <p class="label">Docs</p>
       <ul>
         <li><a class="on" href="#top" aria-current="page">Installation</a></li>
+        <li><a href="guide.html">Make a walkie</a></li>
       </ul>
     </div>
     <div class="group">
@@ -586,7 +592,7 @@ The app starts with bin/dev at http://localhost:3000.</code></pre>
 
     <div class="pager">
       <span></span>
-      <a href="https://github.com/nijicha/skills/blob/main/plugins/walkie/skills/walkie/references/profiles.md"><small>Next</small>Profiles</a>
+      <a href="guide.html"><small>Next</small>Make a walkie</a>
     </div>
   </main>
 
