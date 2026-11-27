@@ -27,7 +27,9 @@ const call = async (name: string, args: Record<string, unknown> = {}, { expectEr
 
 console.log("tools:", (await client.listTools()).tools.map((t) => t.name).join(", "))
 await call("profiles")
-const started = await call("start", { repo, name: "mcp-smoke" })
+await call("start", { repo, name: "mcp-smoke", min_engine: "99.0.0" }, { expectError: true })
+const started = await call("start", { repo, name: "mcp-smoke", min_engine: "0.1.0-alpha" })
+if (!started.includes("Engine: walkie ")) { console.error("FAIL: start does not report the engine version"); process.exit(1) }
 const dir = started.match(/Walkie folder: (.+)/)![1]
 for (const f of ["demo.spec.ts", "page.html", "dark.html"]) cpSync(join(SKILL, "tests/smoke", f), join(dir, f))
 for (const f of ["Prompt-Medium.woff2", "Prompt-Bold.woff2"]) cpSync(join(SKILL, "profiles/default/fonts", f), join(dir, f))
@@ -45,7 +47,8 @@ await call("texts", { id: `${repo.split("/").pop()}--mcp-smoke` })
 await call("rerender", { id: `${repo.split("/").pop()}--mcp-smoke`, text: [{ id: "step-1", html: '<span class="step">1</span>แก้ข้อความ <b>หลังอัด</b>' }] })
 await call("rerender", { id: `${repo.split("/").pop()}--mcp-smoke`, text: [{ id: "step-99", html: "x" }] }, { expectError: true })
 await call("list")
-await call("pr_text", { id: `${repo.split("/").pop()}--mcp-smoke` })
+const pr = await call("pr_text", { id: `${repo.split("/").pop()}--mcp-smoke` })
+if (!pr.includes("Made with [Walkie]")) { console.error("FAIL: pr_text has no Made with Walkie line"); process.exit(1) }
 await call("purge", { older_than_days: 0 })
 await call("delete", { id: `${repo.split("/").pop()}--mcp-smoke` })
 await client.close()

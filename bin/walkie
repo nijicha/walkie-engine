@@ -34,6 +34,6 @@ case "$1" in
   profile) wt || exit 1; shift; exec "$ROOT/bin/wt" profile "$@" ;;
   version) node -p "require('$ROOT/package.json').version" ;;
   path) echo "$ROOT" ;;
-  test) deps; wt || exit 1; (cd "$ROOT/wt" && mise exec -- cargo test --release --quiet) && node --no-warnings "$ROOT/tests/schema/validate.ts" && "$ROOT/scripts/smoke.sh" ;;
+  test) deps; wt || exit 1; (cd "$ROOT/wt" && mise exec -- cargo test --release --quiet) && node --no-warnings "$ROOT/tests/schema/validate.ts" && node --no-warnings "$ROOT/tests/version.test.ts" && "$ROOT/scripts/smoke.sh" ;;
   *) echo "usage: walkie setup | mcp | smoke | test | version | path | preview <profile> [out.html] | profile --list | --resolve <name>" >&2; exit 2 ;;
 esac
