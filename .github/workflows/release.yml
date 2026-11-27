@@ -1,0 +1,55 @@
+# On a version tag (v0.1.0-alpha): build dist/walkie-<version>.tar.gz with scripts/package.sh on an
+# Apple Silicon runner and publish it as a GitHub Release, with notes from CHANGELOG.md. A tag with a
+# suffix (-alpha, -rc.1) is a pre-release. Run by hand (no tag) to test the build; it uploads the
+# archive as a workflow artifact instead of releasing.
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: jdx/mise-action@v2
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Package
+        id: package
+        run: |
+          scripts/package.sh | tee package.txt
+          echo "archive=$(sed -n 1p package.txt)" >> "$GITHUB_OUTPUT"
+          echo "sha256=$(sed -n 2p package.txt)" >> "$GITHUB_OUTPUT"
+
+      - name: Check the archive runs
+        run: |
+          mkdir -p check && tar -xzf "${{ steps.package.outputs.archive }}" -C check --strip-components=1
+          test "$(check/bin/walkie version)" = "$(node -p "require('./package.json').version")"
+          check/bin/walkie profile --list
+
+      - name: Release
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          V="${GITHUB_REF_NAME#v}"
+          test "$V" = "$(node -p "require('./package.json').version")" || { echo "tag $GITHUB_REF_NAME does not match package.json"; exit 1; }
+          awk -v h="## $V" '$0==h{f=1;next} /^## /{f=0} f' CHANGELOG.md > notes.md
+          printf '\n```\nbrew install nijicha/tap/walkie\nwalkie setup\n```\n\nsha256 `%s`\n' "${{ steps.package.outputs.sha256 }}" >> notes.md
+          pre=""; case "$V" in *-*) pre="--prerelease";; esac
+          gh release create "$GITHUB_REF_NAME" "${{ steps.package.outputs.archive }}" --title "walkie $V" --notes-file notes.md $pre
+
+      - name: Upload (manual run)
+        if: "!startsWith(github.ref, 'refs/tags/')"
+        uses: actions/upload-artifact@v4
+        with:
+          name: walkie-archive
+          path: ${{ steps.package.outputs.archive }}
