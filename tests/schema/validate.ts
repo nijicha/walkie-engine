@@ -26,6 +26,8 @@ for (const dir of Object.values(profiles)) {
     if (existsSync(join(dir, `${kind}.json`))) check(kind, join(dir, `${kind}.json`))
   }
 }
+// The English voice defaults (profiles/default/voice.en.json) are a voice file too.
+check("voice", join(ROOT, "profiles/default/voice.en.json"))
 const lib = LIBRARY
 if (existsSync(lib)) for (const id of readdirSync(lib)) {
   if (existsSync(join(lib, id, "manifest.json"))) check("manifest", join(lib, id, "manifest.json"))

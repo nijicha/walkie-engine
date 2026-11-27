@@ -1,7 +1,8 @@
 //! The files the voice needs, downloaded once and checked against pinned hashes:
 //!   - the MakHam ONNX models (pythainlp/MakHamTTS on Hugging Face, Apache-2.0),
 //!   - FastThaiG2P's dictionary, IPA table and TLTK fallback data (awslabs/FastThaiG2P),
-//!   - PyThaiNLP's default word list (for maiyamok; PyThaiNLP 5.4.0, Apache-2.0).
+//!   - PyThaiNLP's default word list (for maiyamok; PyThaiNLP 5.4.0, Apache-2.0),
+//!   - for English, Kokoro-82M v1.0 (onnx-community/Kokoro-82M-v1.0-ONNX, Apache-2.0).
 //! They go to ~/.cache/walkie/tts (WALKIE_TTS_DATA overrides it). A model already in
 //! the Hugging Face cache (from the Python version) is used from there.
 
@@ -122,4 +123,50 @@ pub fn g2p_data() -> Result<PathBuf> {
 /// PyThaiNLP's default word list.
 pub fn words_th() -> Result<PathBuf> {
     fetch(WORDS_TH_URL, WORDS_TH_SHA, &cache().join("pythainlp-5.4.0/words_th.txt"))
+}
+
+// Kokoro-82M v1.0 (English), onnx-community/Kokoro-82M-v1.0-ONNX on Hugging Face, Apache-2.0.
+// MakHam is a Thai Kokoro distilled to one voice; this is the full multi-voice model, so it
+// also takes a voice: a style table, 510 rows of 256 floats, one row per token count.
+const KOKORO_REPO: &str = "onnx-community/Kokoro-82M-v1.0-ONNX";
+const KOKORO_REV: &str = "1939ad2a8e416c0acfeecc08a694d14ef25f2231";
+
+/// Kokoro models: int8 (92 MB) and fp32 (326 MB).
+pub fn kokoro_model(name: &str) -> Option<(&'static str, &'static str)> {
+    match name {
+        "kokoro" => Some(("onnx/model_quantized.onnx", "fbae9257e1e05ffc727e951ef9b9c98418e6d79f1c9b6b13bd59f5c9028a1478")),
+        "kokoro_fp32" => Some(("onnx/model.onnx", "8fbea51ea711f2af382e88c833d9e288c6dc82ce5e98421ea61c058ce21a34cb")),
+        _ => None,
+    }
+}
+
+pub const KOKORO_MODELS: &str = "kokoro, kokoro_fp32";
+
+/// US English speakers (af_ female, am_ male), the better-rated ones in Kokoro's VOICES.md.
+pub fn kokoro_speaker(name: &str) -> Option<(String, &'static str)> {
+    let sha = match name {
+        "af_heart" => "d583ccff3cdca2f7fae535cb998ac07e9fcb90f09737b9a41fa2734ec44a8f0b",
+        "af_bella" => "f69d836209b78eb8c66e75e3cda491e26ea838a3674257e9d4e5703cbaf55c8b",
+        "af_nicole" => "cd2191ab31b914ed7b318416b0e4440fdf392ddad9106a060819aa600a64f59a",
+        "af_sarah" => "4409fbc125afabacc615d94db5398d847006a737b0247d6892b7a9a0007a2f0a",
+        "am_michael" => "1d1f21dd8da39c30705cd4c75d039d265e9bc4a2a93ed09bc9e1b1225eb95ba1",
+        "am_fenrir" => "c27989f741f7ee34d273a39d8a595cc0837d35f5ced9a29b7cc162614616df43",
+        "am_puck" => "fcf73c989033e9233e0b98713eca600c8c74dcc1614b37009d5450ff4a2274a0",
+        _ => return None,
+    };
+    Some((format!("voices/{name}.bin"), sha))
+}
+
+pub const KOKORO_SPEAKERS: &str = "af_heart, af_bella, af_nicole, af_sarah, am_michael, am_fenrir, am_puck";
+pub const KOKORO_TOKENIZER: (&str, &str) = ("tokenizer.json", "77a02c8e164413299b4b4c403b14f8e0e1c1b727db4d46a09d6327b861060a34");
+
+/// A file of the Kokoro model, from the Hugging Face cache when it has this revision.
+pub fn kokoro_file(file: &str, sha: &str) -> Result<PathBuf> {
+    let hf_home = std::env::var("HF_HOME").map(PathBuf::from).unwrap_or_else(|_| home().join(".cache/huggingface"));
+    let hf = hf_home.join("hub/models--onnx-community--Kokoro-82M-v1.0-ONNX/snapshots").join(KOKORO_REV).join(file);
+    if hf.exists() {
+        return Ok(hf);
+    }
+    let url = format!("https://huggingface.co/{KOKORO_REPO}/resolve/{KOKORO_REV}/{file}");
+    fetch(&url, sha, &cache().join(format!("kokoro-{}", &KOKORO_REV[..8])).join(file))
 }

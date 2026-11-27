@@ -67,6 +67,13 @@ async function resolveProfile(repo: string, dir: string, profile?: string) {
   return readJson(join(dir, "profile.json"))
 }
 
+// For start: the language the narration must be written in, and the voice that says it.
+function voiceLine(v: { language?: string; engine?: string; model?: string; speaker?: string }) {
+  return v.language === "en"
+    ? `English (Kokoro, speaker ${v.speaker ?? "af_heart"}). Write the narration in English.`
+    : `Thai (MakHam, ${v.model ?? "makham_female"}). Write the narration in Thai.`
+}
+
 function demoDir(repo: string, name: string) {
   if (!NAME.test(name)) throw new Error(`name must be lower-case letters, digits and dashes: ${name}`)
   for (const workDir of ["tmp/demo", ...candidateWorkDirs()]) {
@@ -161,7 +168,8 @@ function videoId(repo: string, name: string) {
 function createServer() {
   const server = new McpServer({ name: "walkie", version: VERSION }, {
     instructions:
-      "Makes walkies: narrated videos of a change, step by step, with Thai voice-over. " +
+      "Makes walkies: narrated videos of a change, step by step, with a voice-over in the profile's language " +
+      "(Thai or English; start says which, write the narration in it). " +
       "Flow: start -> storyboard (show the table to the user and wait for approval) -> write the spec " +
       "(demo.spec.ts, or demo_test.dart for a Flutter app) following the profile notes -> start the app (web) -> record (show the contact sheet, wait for approval) -> " +
       "give the MP4 path. Read the walkie skill (SKILL.md) for the kit API and pronunciation rules. " +
@@ -215,6 +223,7 @@ function createServer() {
           ? `Runner: flutter (app ${join(root, again.profile.record.app_dir)}, device ${again.profile.record.device ?? "the running one"}). ` +
             "Read the walkie skill's references/flutter.md before writing the test."
           : "Runner: browser (Playwright)",
+        `Voice: ${voiceLine(again.voice)}`,
         `Sequence: ${Object.entries(again.sequence).filter(([, v]) => typeof v === "boolean").map(([k, v]) => `${k} ${v ? "on" : "off"}`).join(", ")}`,
         ignored ? "" : `WARNING: ${work} is not gitignored; add it before recording.`,
         "",
@@ -233,8 +242,9 @@ function createServer() {
     description:
       "Checkpoint 1. Save the scenes and their narration, generate the voice for every line, and return a " +
       "table with each line's length, pace and phonemes. Show the table to the user and wait for approval " +
-      "before recording. Fix any line flagged FAST (add spaces where a person would breathe) or DROPPED " +
-      "(respell, or add a lexicon entry), and call again. Clip n0 is the intro; the last clip is the summary.",
+      "before recording. Fix any line flagged FAST (Thai: add spaces where a person would breathe; English: " +
+      "shorten it), CHOPPY (Thai: join phrases), UNKNOWN (English: words the voice cannot read and leaves out; add " +
+      "a lexicon entry) or DROPPED (respell, or add a lexicon entry), and call again. Clip n0 is the intro; the last clip is the summary.",
     annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
     inputSchema: z.object({
       repo: z.string().describe("Absolute path to the repo root"),
@@ -244,7 +254,7 @@ function createServer() {
         caption: z.string().optional().describe("Caption as the UI spells it; <b> marks UI words"),
         highlight: z.string().optional().describe("The element to mark, in words or as a locator"),
         action: z.string().optional().describe("What happens on screen"),
-        narration: z.string().describe("Thai sentence for the ear; spaces are phrase breaks; {phonemes} allowed"),
+        narration: z.string().describe("A sentence for the ear, in the profile's language. Thai: spaces are phrase breaks. {phonemes} allowed"),
       })).min(1),
     }),
   }, async ({ repo, name, scenes }) => {
@@ -401,11 +411,11 @@ function createServer() {
   server.registerTool("voice_preview", {
     title: "Preview a voice line",
     description:
-      "Voice one Thai line with a profile, to test a spelling or a lexicon entry. Returns the WAV path and " +
-      "the phonemes. {phonemes} inline work, e.g. {sa↓.paːk↑}.",
+      "Voice one line with a profile, in its language, to test a spelling or a lexicon entry. Returns the WAV " +
+      "path and the phonemes. {phonemes} inline work, e.g. Thai {sa↓.paːk↑}, English {ˈɛvəntpˌɑp}.",
     annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
     inputSchema: z.object({
-      text: z.string().describe("One Thai line, as it would go in the narration; {phonemes} allowed"),
+      text: z.string().describe("One line, as it would go in the narration; {phonemes} allowed"),
       repo: z.string().optional().describe("Repo whose profile to use; or give profile"),
       profile: z.string().optional().describe("Profile name; default when neither is given"),
     }),
@@ -433,7 +443,7 @@ function createServer() {
       id: z.string().describe("Library id, <repo>--<name>"),
       clips: z.array(z.object({
         clip: z.string().describe("Clip name, e.g. n2"),
-        narration: z.string().describe("The new Thai line; spaces are phrase breaks"),
+        narration: z.string().describe("The new line, in the profile's language (Thai: spaces are phrase breaks)"),
       })).min(1).describe("Only the clips to change"),
     }),
   }, async ({ id, clips }) => {
@@ -596,7 +606,9 @@ function createServer() {
     title: "Read or edit a profile's lexicon",
     description:
       "The lexicon maps a word, as written in the narration, to exact phonemes when the TTS reads it wrong. " +
-      "Tones: ↓ low, → mid, ↑ high, ↗ rising, ↘ falling; . between syllables. Preview with voice_preview first.",
+      "Thai: tones ↓ low, → mid, ↑ high, ↗ rising, ↘ falling; . between syllables (สปาร์ก -> sa↓.paːk↑). English: " +
+      "misaki's US set, ˈ and ˌ stress before the vowel, A I O W Y for the diphthongs of day, my, go, now, boy " +
+      "(Eventpop -> ˈɛvəntpˌɑp). Preview with voice_preview first.",
     annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
     inputSchema: z.object({
       profile: z.string().describe("Profile name, from profiles"),

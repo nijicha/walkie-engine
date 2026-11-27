@@ -1,0 +1,13 @@
+{
+  "engine": "kokoro",
+  "language": "en",
+  "model": "kokoro",
+  "speaker": "af_heart",
+  "speed": 1.0,
+  "phrase_gap": 0.3,
+  "max_rate": 5.5,
+  "eq": "",
+  "breath": "keep",
+  "breath_db": -18,
+  "lexicon": {}
+}

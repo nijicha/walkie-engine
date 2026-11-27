@@ -3,7 +3,7 @@
 Walkie makes **walkies**: slow, narrated videos of one code change, for people outside engineering (support, operations, organizers). This repo is the engine: it records the app, speaks the narration and builds the MP4. An agent drives it through the [walkie plugin](https://github.com/nijicha/skills/tree/main/plugins/walkie) for Claude Code.
 
 - Playwright records a web app; a Flutter app records on an iOS Simulator or Android emulator.
-- A Thai voice explains each step (MakHam, on your Mac's CPU). More languages are planned.
+- A voice explains each step, on your Mac's CPU: Thai (MakHam) or English (Kokoro), set by the profile.
 - Captions, a highlight box, a cursor and cards come from a per-team profile.
 - A video is kept as layers (page, overlay, text, voice), so narration, text or the look can change without recording again.
 
@@ -15,7 +15,7 @@ macOS on Apple Silicon only for now (ONNX Runtime, which runs the voice, ships n
 
 ```bash
 brew install nijicha/tap/walkie
-walkie setup        # once: Chromium and the Thai voice model
+walkie setup        # once: Chromium and the Thai voice model (walkie setup en: also English)
 ```
 
 Then, in Claude Code:
@@ -43,7 +43,7 @@ Then, in Claude Code:
 | `bin/walkie` | The command line |
 | `mcp/` | MCP server: `start`, `storyboard`, `record`, `revoice`, `rerender`, … |
 | `scripts/` | Recording kit (Playwright), overlay drawing, build, queue, library (TypeScript) |
-| `wt/` | `wt`: Thai TTS, video mixing, contact sheet, simulator recording (Rust) |
+| `wt/` | `wt`: Thai and English TTS, video mixing, contact sheet, simulator recording (Rust) |
 | `flutter/` | The recording kit for Flutter apps (Dart) |
 | `profiles/default/` | The default look and voice; every team profile is merged over it |
 | `schema/` | JSON Schemas for profiles, videos and events: the contract for apps built on the engine |
@@ -68,4 +68,4 @@ Bump the version in `package.json`, add a `## <version>` section to `CHANGELOG.m
 
 ## License
 
-MIT, see [LICENSE](LICENSE). Bundled fonts keep their own licenses: Prompt and CaskaydiaCove Nerd Font are under the SIL Open Font License (`OFL.txt` next to each). The Thai voice model (MakHam) is Apache-2.0 and is downloaded at setup, not bundled.
+MIT, see [LICENSE](LICENSE). Bundled fonts keep their own licenses: Prompt and CaskaydiaCove Nerd Font are under the SIL Open Font License (`OFL.txt` next to each). The voice models, MakHam (Thai) and Kokoro-82M (English), are Apache-2.0 and are downloaded at setup, not bundled. The English G2P, misaki-rs, is MIT and is built without espeak-ng.

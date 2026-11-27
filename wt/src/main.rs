@@ -4,8 +4,9 @@
 //!   wt mix content RAW DIR | compose DIR OUT | remix VIDEO OUT DIR | backdrops DIR
 //!   wt frames VIDEO DIR OUT.png                       contact sheet and flash check
 //!   wt device record DIR REPO [DEVICE] | config DIR | collect LOG DIR
-//!   wt tts DEMO_DIR < narration.tsv                   Thai voice clips (MakHam)
-//!   wt tts --setup                                    download the voice model and Thai data
+//!   wt tts DEMO_DIR < narration.tsv                   voice clips (Thai: MakHam, English: Kokoro)
+//!   wt tts th|en --setup                              download a language's voice model and data
+//!   wt tts th|en OUT.wav "text"                       say one line with the default voice
 //!   wt g2p [LEXICON_JSON] < lines                     phonemes per line (to check the G2P)
 
 mod device;

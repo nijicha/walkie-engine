@@ -7,7 +7,9 @@
 //!
 //! A profile is a folder with profile.json, theme.json, sequence.json and voice.json; its name is
 //! the `name` in profile.json (or the folder name). Each file is merged over the same file in the
-//! built-in profiles/default, so a profile only lists what it changes.
+//! built-in profiles/default, so a profile only lists what it changes. A voice.json in another
+//! language than the default's (Thai) is merged over that language's defaults instead:
+//! profiles/default/voice.<language>.json, so `{"language": "en"}` alone gives the English voice.
 //!
 //! Profiles are found, first match wins, in: each folder of WALKIE_PROFILES (colon-separated),
 //! ~/.config/walkie/profiles, then the engine's profiles/. A team keeps its profile in its own
@@ -116,7 +118,17 @@ impl Profiles {
     /// The profile merged over default, with font, image and template paths made absolute.
     fn resolve(&self, name: &str) -> Result<Map<String, Value>> {
         let picked = Value::Object(self.load(name)?);
-        let resolved = if name != "default" { merge(&Value::Object(self.load("default")?), &picked) } else { picked };
+        let mut base = self.load("default")?;
+        if let Some(language) = picked["voice"].get("language").and_then(Value::as_str) {
+            let own = self.folder("default")?.join(format!("voice.{language}.json"));
+            if base["voice"].get("language").and_then(Value::as_str) != Some(language) {
+                if !own.exists() {
+                    bail!("profile {name:?}: no voice for language {language:?} (profiles/default has no voice.{language}.json)");
+                }
+                base.insert("voice".into(), read_json(&own)?);
+            }
+        }
+        let resolved = if name != "default" { merge(&Value::Object(base), &picked) } else { picked };
         let Value::Object(mut resolved) = resolved else { unreachable!() };
         let caskaydia = self.skill.join("fonts/caskaydia");
         let theme = resolved.entry("theme").or_insert_with(|| json!({}));
