@@ -11,7 +11,7 @@ Docs: [nijicha.github.io/walkie-engine](https://nijicha.github.io/walkie-engine)
 
 ## Install
 
-macOS only for now.
+macOS on Apple Silicon only for now (ONNX Runtime, which runs the voice, ships no prebuilt library for Intel Macs).
 
 ```bash
 brew install nijicha/tap/walkie
@@ -61,6 +61,10 @@ bin/walkie test
 pnpm typecheck
 pnpm test:mcp        # every MCP tool, end to end
 ```
+
+## Release
+
+Bump the version in `package.json`, add a `## <version>` section to `CHANGELOG.md`, then push a tag that equals it (`git tag -a v0.1.0-alpha -m … && git push origin v0.1.0-alpha`). The **Release** workflow builds the archive with `scripts/package.sh` and publishes a GitHub Release; then update `url` and `sha256` in `Formula/walkie.rb` in [nijicha/homebrew-tap](https://github.com/nijicha/homebrew-tap).
 
 ## License
 
