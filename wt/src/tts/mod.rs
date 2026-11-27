@@ -18,6 +18,7 @@
 //! {sa↓.paːk↑} in narration.tsv.
 
 mod data;
+mod english;
 mod g2p;
 mod newmm;
 mod normalize;
@@ -385,6 +386,11 @@ fn setup() -> Result<()> {
 
 /// Phonemes for each line on stdin, as wt tts would say it (phrases joined by " | "); for checking
 /// the G2P against the Python one.
+/// Spike: English with Kokoro.
+pub fn english_main(args: &[String]) -> Result<()> {
+    english::main(args)
+}
+
 pub fn g2p_main(args: &[String]) -> Result<()> {
     let lex = match args {
         [] => IndexMap::new(),

@@ -7,6 +7,7 @@
 //!   wt tts DEMO_DIR < narration.tsv                   Thai voice clips (MakHam)
 //!   wt tts --setup                                    download the voice model and Thai data
 //!   wt g2p [LEXICON_JSON] < lines                     phonemes per line (to check the G2P)
+//!   wt tts-en [--voice V] OUT.wav "text"              spike: English voice (Kokoro)
 
 mod device;
 mod frames;
@@ -25,6 +26,7 @@ fn main() {
         "device" => device::main(rest),
         "tts" => tts::main(rest),
         "g2p" => tts::g2p_main(rest),
+        "tts-en" => tts::english_main(rest),
         _ => Err(anyhow::anyhow!(include_str!("usage.txt").trim().to_string())),
     };
     if let Err(e) = result {
