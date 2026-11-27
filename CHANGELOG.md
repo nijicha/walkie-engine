@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.2-alpha
+
+- `walkie doctor` checks the Mac, Node, ffmpeg, the engine's packages and Chromium, its tools, the voices, profiles, the library, the queue, free disk and the Claude Code plugin, and names the fix for each problem. The report shows the home folder as `~` and profile names only, so it can be pasted into an issue.
+- Issue templates (bug, pronunciation, idea), CONTRIBUTING and SECURITY.
+- Fixed: `storyboard` voiced with the profile as it was at `start`, so a lexicon entry added during a walkie (walkie:lexicon) was ignored until the next walkie. It now reads the profile's current voice on every run.
+- The spec templates' placeholder cards and captions are in English, with a note to write them in the narration's language. They no longer nudge an English walkie into Thai.
+
 ## 0.2.1-alpha
 
 - `walkie setup` asks which voices to set up (Thai, English), listing each with its size and whether it is installed. In a script, it keeps the voices already installed, or Thai.

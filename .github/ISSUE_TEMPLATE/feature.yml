@@ -1,0 +1,16 @@
+name: Idea
+description: Something walkie could do, or do better.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: want
+    attributes:
+      label: What you want to do
+      description: The job you were trying to get done, and where walkie got in the way. A real example helps most.
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: An idea for how
+      description: Optional. How it could work, or what you do today instead.

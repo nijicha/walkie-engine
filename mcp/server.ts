@@ -67,6 +67,16 @@ async function resolveProfile(repo: string, dir: string, profile?: string) {
   return readJson(join(dir, "profile.json"))
 }
 
+// The walkie's profile.json is resolved once, at start. Its voice is read again before each
+// storyboard run, so lexicon entries added since (walkie:lexicon) are used right away.
+async function refreshVoice(dir: string) {
+  const prof = readJson(join(dir, "profile.json"))
+  const now = await run(WT, ["profile", "--resolve", prof.profile.name])
+  if (now.code !== 0) return
+  prof.voice = JSON.parse(now.out).voice
+  writeFileSync(join(dir, "profile.json"), JSON.stringify(prof, null, 1))
+}
+
 // For start: the language the narration must be written in, and the voice that says it.
 function voiceLine(v: { language?: string; engine?: string; model?: string; speaker?: string }) {
   return v.language === "en"
@@ -263,6 +273,7 @@ function createServer() {
       writeFileSync(join(dir, "storyboard.json"), JSON.stringify(scenes, null, 1))
       const tsv = scenes.map((s) => `${s.clip}\t${s.narration.replace(/[\t\n]+/g, " ")}`).join("\n") + "\n"
       writeFileSync(join(dir, "narration.tsv"), tsv)
+      await refreshVoice(dir)
       const lines = await voice(dir, tsv)
       const byClip = Object.fromEntries(lines.map((l) => [l.clip, l]))
       const rows = scenes.map((s) => {

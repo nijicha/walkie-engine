@@ -1,0 +1,28 @@
+name: Pronunciation
+description: The voice says a word or a line wrongly, and a lexicon entry or a respelling does not fix it.
+labels: [voice]
+body:
+  - type: dropdown
+    id: language
+    attributes:
+      label: Language
+      options:
+        - Thai (MakHam)
+        - English (Kokoro)
+    validations:
+      required: true
+  - type: textarea
+    id: line
+    attributes:
+      label: The line
+      description: The narration line as you wrote it, and the phonemes the storyboard table (or `walkie say`) printed for it.
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: How it should sound
+      description: Say it in words (for example "Eventpop as EV-ent-pop"), or give the phonemes you expected. What you tried already (respelling, lexicon entries) helps too.
+    validations:
+      required: true

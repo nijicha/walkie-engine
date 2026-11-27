@@ -7,6 +7,7 @@
 #                LANG: th (Thai, MakHam) or en (English, Kokoro).
 # walkie setup list  the voices: model, size, installed or not (downloads nothing)
 # walkie say LANG OUT.wav "text"  one line with that language's default voice (to try a spelling)
+# walkie doctor     checks what walkie needs (to paste into an issue); installs nothing
 # walkie mcp     MCP server on stdio (for T3 Code, Claude Code, Codex)
 # walkie smoke   record the kit smoke test (a static page, no app needed)
 # walkie version the engine version
@@ -58,6 +59,7 @@ case "$1" in
     shift
     case "$1" in th|en) [ $# -eq 3 ] || { echo 'usage: walkie say th|en OUT.wav "text"' >&2; exit 2; } ;; *) echo 'usage: walkie say th|en OUT.wav "text"' >&2; exit 2 ;; esac
     wt || exit 1; exec "$ROOT/bin/wt" tts "$@" ;;
+  doctor) exec node --no-warnings "$ROOT/scripts/doctor.ts" ;;
   mcp) deps; [ ! -x "$ROOT/bin/wt" ] || wt; exec node --no-warnings "$ROOT/mcp/server.ts" ;;
   smoke) deps; wt || exit 1; exec "$ROOT/scripts/smoke.sh" ;;
   preview) deps; wt || exit 1; shift; exec node --no-warnings "$ROOT/scripts/preview.ts" "$@" ;;
@@ -65,5 +67,5 @@ case "$1" in
   version) node -p "require('$ROOT/package.json').version" ;;
   path) echo "$ROOT" ;;
   test) deps; wt || exit 1; (cd "$ROOT/wt" && mise exec -- cargo test --release --quiet) && node --no-warnings "$ROOT/tests/schema/validate.ts" && node --no-warnings "$ROOT/tests/version.test.ts" && "$ROOT/scripts/smoke.sh" ;;
-  *) echo "usage: walkie setup [th] [en] | setup list | say th|en OUT.wav \"text\" | mcp | smoke | test | version | path | preview <profile> [out.html] | profile --list | --resolve <name>" >&2; exit 2 ;;
+  *) echo "usage: walkie setup [th] [en] | setup list | say th|en OUT.wav \"text\" | doctor | mcp | smoke | test | version | path | preview <profile> [out.html] | profile --list | --resolve <name>" >&2; exit 2 ;;
 esac

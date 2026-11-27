@@ -36,6 +36,7 @@ Then, in Claude Code:
 | `walkie smoke` | Records a static test page, no app needed |
 | `walkie preview <profile> [out.html]` | Shows every state of a profile's look on a sample page |
 | `walkie profile --list` / `--resolve <name>` | Lists profiles / prints one merged over `default` |
+| `walkie doctor` | Checks what walkie needs and names the fix (paste it into a bug report) |
 | `walkie version`, `walkie path` | The engine version / its folder |
 | `walkie test` | The Rust tests, schema checks and the smoke recording |
 

@@ -126,7 +126,7 @@ class Demo {
     await hideCard();
   }
 
-  /// Short card between parts ("ก่อนแก้" / "หลังแก้"). Only when chapter is on.
+  /// Short card between parts ("Before" / "After", or ก่อนแก้ / หลังแก้). Only when chapter is on.
   Future<void> chapter(String html, [String? clip]) async {
     if (!_on('chapter')) return;
     await _clearStage();

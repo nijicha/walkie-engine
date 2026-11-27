@@ -1,7 +1,7 @@
 {
   "name": "walkie",
   "private": true,
-  "version": "0.2.1-alpha",
+  "version": "0.2.2-alpha",
   "type": "module",
   "description": "Walkie engine: records an app, adds a narrated voice-over and builds an MP4 of a code change. CLI and MCP server.",
   "bin": {

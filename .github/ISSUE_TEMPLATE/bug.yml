@@ -1,0 +1,52 @@
+name: Bug
+description: Something in walkie does not work, or a video comes out wrong.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. Before you send it, look at what you paste: remove anything private (repo names, URLs, customer data, profile contents).
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what you got instead. Paste the error as it was printed.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: How to make it happen again
+      placeholder: |
+        1. Asked Claude Code for a walkie of …
+        2. At the storyboard checkpoint …
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where it happened
+      options:
+        - Installing or walkie setup
+        - Storyboard or voice
+        - Recording (web app)
+        - Recording (Flutter app)
+        - The finished video (overlay, sound, flashes)
+        - Changing a finished walkie (revoice, rerender)
+        - Something else
+    validations:
+      required: true
+  - type: dropdown
+    id: language
+    attributes:
+      label: Narration language
+      options:
+        - Thai
+        - English
+        - Not about the voice
+  - type: textarea
+    id: doctor
+    attributes:
+      label: walkie doctor
+      description: Run `walkie doctor` in a terminal and paste the whole report. It shows your home folder as ~ and lists profile names only.
+      render: text
+    validations:
+      required: true
