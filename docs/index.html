@@ -465,10 +465,13 @@ walkie setup</code></pre>
 
       <li class="step">
         <h3 id="step-check">Check that it works</h3>
-        <p>Restart Claude Code. Open <code>/mcp</code>: <code>plugin:walkie:walkie</code> should be connected. Then record the smoke test. It records a static page, so you don't need an app.</p>
+        <p>Check the engine version, then record the smoke test. It records a static page, so you don't need an app.</p>
         <div class="code">
           <div class="bar"><span class="where">Terminal</span><button class="copy" type="button">Copy</button></div>
-          <pre><code>walkie smoke</code></pre>
+          <pre><code>walkie version
+walkie smoke</code></pre>
+        </div>
+        <p>Restart Claude Code and open <code>/mcp</code>: <code>plugin:walkie:walkie</code> should be connected. Each walkie starts by printing <code>Engine: walkie &lt;version&gt;</code>.</p>
         </div>
       </li>
 
@@ -543,7 +546,7 @@ The app starts with bin/dev at http://localhost:3000.</code></pre>
     <p>A new engine will plug in behind the same two fields, so a profile switches language by changing <code>engine</code> and <code>language</code>. Recordings, captions and the look stay the same.</p>
 
     <h2 id="update">Update</h2>
-    <p>The engine and the plugin update separately.</p>
+    <p>The engine and the plugin update separately. Upgrade the engine first: a newer skill refuses to start on an older engine and tells you to upgrade. Restart Claude Code after both.</p>
         <div class="code">
           <div class="bar"><span class="where">Terminal</span><button class="copy" type="button">Copy</button></div>
           <pre><code>brew upgrade walkie</code></pre>
@@ -560,6 +563,7 @@ The app starts with bin/dev at http://localhost:3000.</code></pre>
         <thead><tr><th>You see</th><th>Do this</th></tr></thead>
         <tbody>
           <tr><td><code>plugin:walkie:walkie</code> fails to connect</td><td>The engine isn't installed or isn't on your <code>PATH</code>. Run <code>walkie version</code> in a terminal; if it fails, do step 1.</td></tr>
+          <tr><td><code>The walkie engine is …, older than this skill needs</code>, or Claude reports an unknown <code>min_engine</code></td><td>Run <code>brew upgrade walkie</code>, then restart Claude Code.</td></tr>
           <tr><td><code>engine packages missing: run … setup</code></td><td>Run <code>walkie setup</code>.</td></tr>
           <tr><td>The voice model downloads every time</td><td>Something clears <code>~/.cache/walkie</code>. Set <code>WALKIE_TTS_DATA</code> to a folder that stays.</td></tr>
           <tr><td>The recording stutters</td><td>Recording is real time. Heavy steps wait in one queue for the whole machine; close other heavy work while it records.</td></tr>
